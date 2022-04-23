@@ -1,0 +1,43 @@
+{
+    "@context": "http://iiif.io/api/presentation/2/context.json",
+    "@id": "{{{ baseUrl }}}/p/2/{{ presentUuid }}",
+    "@type": "sc:Manifest",
+    "label": "{{ label }}",
+    "sequences": [
+
+        {
+            "@id": "{{{ baseUrl }}}/s/2/{{ canvasUuid }}",
+            "@type": "sc:Sequence",
+            "label": "{{ label }}",
+            "canvases": [
+                {{#items}}
+                {
+                    "@id": "{{{ baseUrl }}}/c/2/{{ canvasUuid }}",
+                    "@type": "sc:Canvas",
+                    "label": "{{ label }}",
+                    "images": [
+                        {
+                            "@id": "{{{ baseUrl }}}/c/2/{{ canvasUuid }}/ap/p",
+                            "@type": "oa:Annotation",
+                            "motivation": "sc:painting",
+                            "resource": {
+                                "@id": "i/2/{{ etag }}",
+                                "@type": "dctypes:Image",
+                                "format": "image/jpeg",
+                                "service": {
+                                    "@context": "http://iiif.io/api/image/2/context.json",
+                                    "@id": "i/2/{{ etag }}",
+                                    "profile": "http://iiif.io/api/image/2/level2.json"
+                                }
+                            },
+                            "on": "{{{ baseUrl }}}/c/2/{{ canvasUuid }}"
+                        }
+                    ],
+                    "height": {{ height }},
+                    "width": {{ width }}
+                }{{^last}}, {{/last}}
+                {{/items}}
+            ]
+        }
+    ]
+}
