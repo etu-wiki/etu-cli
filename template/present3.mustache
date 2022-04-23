@@ -1,0 +1,54 @@
+{
+    "@context": "http://iiif.io/api/presentation/3/context.json",
+    "id": "{{{ baseUrl }}}/p/3/{{ presentUuid }}",
+    "type": "Manifest",
+    "label": {
+        "zh-Hant": [
+            "{{ label }}"
+        ]
+    },
+    "items": [
+        {{#items}}
+        {
+            "id": "{{{ baseUrl }}}/c/3/{{ canvasUuid }}",
+            "type": "Canvas",
+            "label": {
+                "zh-Hant": [
+                    "{{ label }}"
+                ]
+            },
+            "height": {{ height }},
+            "width": {{ width }},
+            "items": [
+                {
+                    "id": "{{{ baseUrl }}}/c/3/{{ canvasUuid }}/ap/p",
+                    "type": "AnnotationPage",
+                    "items": [
+                        {
+                            "id": "{{{ baseUrl }}}/c/3/{{ canvasUuid }}/ap/p/a/",
+                            "type": "Annotation",
+                            "motivation": "painting",
+                            "body": {
+                                "id": "{{{ baseUrl }}}/i/3/{{ etag }}{{^tile}}.jpg{{/tile}}",
+                                "type": "Image",
+                                "format": "image/jpeg"
+                                {{^level0}}
+                                ,
+                                "service": [
+                                    {
+                                        "id": "{{{ baseUrl }}}/i/3/{{ etag }}",
+                                        "type": "ImageService3",
+                                        "profile": "level2"
+                                    }
+                                ]
+                                {{/level0}}
+                            },
+                            "target": "{{{ baseUrl }}}/c/3/{{ canvasUuid }}"
+                        }
+                    ]
+                }
+            ]
+        }{{^last}}, {{/last}}
+        {{/items}}
+    ]
+}
