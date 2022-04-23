@@ -14,6 +14,9 @@ const error = (message) => `${chalk.red(" ERROR:")} ${message}`;
 
 import Jimp from "jimp";
 
+import {fileURLToPath} from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const ETU_PATH = os.homedir + "/etu/";
 
 function addLastMark(arr) {
@@ -32,7 +35,6 @@ export default async function generateIIIF(
   baseUrl
 ) {
   const presentUuid = uuid();
-  const __dirname = path.resolve();
 
   const model = {
     baseUrl,
@@ -98,7 +100,7 @@ export default async function generateIIIF(
   }
 
   const template = fs
-    .readFileSync(__dirname + "/template/present" + iiifVersion + ".mustache")
+    .readFileSync(__dirname + "/../template/present" + iiifVersion + ".mustache")
     .toString();
   const present = Mustache.render(template, model);
 
@@ -106,7 +108,7 @@ export default async function generateIIIF(
   mkdir.sync(presentFolder);
   fs.writeFileSync(presentFolder + presentUuid + ".json", present);
 
-  fs.symlinkSync(__dirname + "/viewer/" + viewer, ETU_PATH + "viewer", "dir");
+  fs.symlinkSync(__dirname + "/../viewer/" + viewer, ETU_PATH + "viewer", "dir");
 
   const url =
     model.baseUrl +
