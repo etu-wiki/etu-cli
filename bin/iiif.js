@@ -108,7 +108,6 @@ export default async function generateIIIF(
   mkdir.sync(presentFolder);
   fs.writeFileSync(presentFolder + presentUuid + ".json", present);
 
-  fs.symlinkSync(__dirname + "/../viewer/" + viewer, ETU_PATH + "viewer", "dir");
 
   const url =
     model.baseUrl +

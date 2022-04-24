@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 // Native
+import fs from "fs";
+import path from "path";
 import { createServer as createHttpServer } from "http";
 import { createServer as createSecureHttpSever } from "https";
 import { resolve } from "path";
@@ -17,6 +19,10 @@ import boxen from "boxen";
 import compression from "compression";
 import generateIIIF from "./iiif.js";
 
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // Utilities
 const compressionHandler = promisify(compression());
 const interfaces = networkInterfaces();
@@ -25,8 +31,9 @@ const warning = (message) => `${chalk.yellow(" WARNING:")} ${message}`;
 const info = (message) => `${chalk.magenta(" INFO:")} ${message}`;
 const error = (message) => `${chalk.red(" ERROR:")} ${message}`;
 
-let url;
 const ETU_PATH = homedir + "/etu/";
+
+let publicPath;
 
 const getHelp = () => chalk`
   eut - present your IIIF image on the fly
@@ -56,10 +63,12 @@ const getHelp = () => chalk`
 `;
 
 const clearWorkingFolder = () => {
-  rmSync(ETU_PATH + "i", { recursive: true, force: true });
-  rmSync(ETU_PATH + "p", { recursive: true, force: true });
-  if (existsSync(ETU_PATH + "viewer")) {
-    unlinkSync(ETU_PATH + "viewer");
+  if (publicPath == ETU_PATH) {
+    rmSync(publicPath + "i", { recursive: true, force: true });
+    rmSync(publicPath + "p", { recursive: true, force: true });
+  }
+  if (existsSync(publicPath + "viewer")) {
+    unlinkSync(publicPath + "viewer");
   }
 };
 
@@ -109,6 +118,31 @@ const startEndpoint = async (port, config, args, previous) => {
 
   const { isTTY } = process.stdout;
   const httpMode = args["--ssl-cert"] && args["--ssl-key"] ? "https" : "http";
+
+  let url;
+  const baseUrl = `${httpMode}://localhost:${port}`;
+  if (args["--cookbook"]) {
+    publicPath = __dirname + "/../cookbook/single_image_file/";
+    url =
+      baseUrl + "/viewer/index.html?manifest=" + baseUrl + "/p/manifest.json";
+    open(url);
+  } else {
+    // generate IIIF content
+    publicPath = ETU_PATH;
+    url = await generateIIIF(entry, viewer, iiifVersion, baseUrl);
+    open(url);
+  }
+
+  config.public = publicPath;
+
+  if (existsSync(publicPath + "viewer")) {
+    unlinkSync(publicPath + "viewer");
+  }
+  fs.symlinkSync(
+    __dirname + "/../viewer/" + viewer,
+    publicPath + "viewer",
+    "dir"
+  );
 
   const severHandler = async (request, response) => {
     if (args["--cors"]) {
@@ -162,9 +196,6 @@ const startEndpoint = async (port, config, args, previous) => {
     }
     console.log(info(`Accepting connections on ${localAddress}`));
     try {
-      // generate IIIF content
-      url = await generateIIIF(entry, viewer, iiifVersion, localAddress);
-      open(url);
       const stop = Date.now();
       if (isTTY && process.env.NODE_ENV !== "production") {
         let message = chalk.green("Present your IIIF image on the fly!\n");
@@ -206,6 +237,7 @@ try {
   args = arg({
     "--help": Boolean,
     "--viewer": String,
+    "--cookbook": Boolean,
     "--port": String,
     "--cors": Boolean,
     "--no-port-switching": Boolean,
@@ -223,7 +255,7 @@ try {
 
 if (args["--help"]) {
   console.log(getHelp());
-  process.exit(0);;
+  process.exit(0);
 }
 
 if (!args["--port"]) {
@@ -237,7 +269,6 @@ if (args._.length > 1) {
 }
 
 const config = {};
-config.public = ETU_PATH;
 config.etag = true;
 config.symlinks = true;
 config.cleanUrls = false;
