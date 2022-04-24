@@ -54,6 +54,8 @@ const getHelp = () => chalk`
 
       --help                              Shows this help message
 
+      --cookbook                          Run IIIF Cookbook recipe in etu
+
       -p, --port                          Specify a port on which to listen
 
       -C, --cors                          Enable CORS, sets \`Access-Control-Allow-Origin\` to \`*\`
