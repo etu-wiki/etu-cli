@@ -9,7 +9,8 @@ import { resolve } from "path";
 import { rmSync, existsSync, unlinkSync, readFileSync } from "fs";
 import { promisify } from "util";
 import { networkInterfaces, homedir } from "os";
-import open from "open";
+
+
 
 // Packages
 import chalk from "chalk";
@@ -17,6 +18,8 @@ import arg from "arg";
 import handler from "serve-handler";
 import boxen from "boxen";
 import compression from "compression";
+import inquirer from "inquirer";
+import open from "open";
 import generateIIIF from "./iiif.js";
 
 import { fileURLToPath } from "url";
@@ -122,9 +125,21 @@ const startEndpoint = async (port, config, args, previous) => {
   let url;
   const baseUrl = `${httpMode}://localhost:${port}`;
   if (args["--cookbook"]) {
-    publicPath = __dirname + "/../cookbook/single_image_file/";
+    const answer = await inquirer.prompt([
+      {
+        type: "list",
+        name: "cookbook",
+        message: "Which recipe would you like to choose?",
+        choices: ["Single Image File", "Single Audio File", "Single Video File"],
+      },
+    ]);
+
+    publicPath = __dirname + `/../cookbook/${answer.cookbook.replace(/\s/g, '_').toLowerCase()}/`;
     url =
-      baseUrl + "/viewer/index.html?manifest=" + baseUrl + "/p/manifest.json";
+      baseUrl +
+      "/viewer/index.html?manifest=" +
+      baseUrl +
+      "/manifest.json";
     open(url);
   } else {
     // generate IIIF content
