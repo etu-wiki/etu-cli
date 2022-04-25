@@ -11,7 +11,8 @@
   "files": [
     "bin",
     "viewer",
-    "template"
+    "template",
+    "cookbook"
   ],
   "bin": {
     "etu": "./bin/etu.js"
