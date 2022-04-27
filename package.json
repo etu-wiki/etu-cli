@@ -1,6 +1,6 @@
 {
   "name": "etu-cli",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "command line tool to lanch iiif in localhost",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
