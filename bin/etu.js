@@ -73,7 +73,7 @@ const clearWorkingFolder = () => {
     rmSync(publicPath + "p", { recursive: true, force: true });
   }
   if (existsSync(publicPath + "viewer")) {
-    unlinkSync(publicPath + "viewer");
+    rmSync(publicPath + "viewer", { recursive: true, force: true });
   }
 };
 
@@ -153,12 +153,12 @@ const startEndpoint = async (port, config, args, previous) => {
   config.public = publicPath;
 
   if (existsSync(publicPath + "viewer")) {
-    unlinkSync(publicPath + "viewer");
+    rmSync(publicPath + "viewer", { recursive: true, force: true });
   }
-  fs.symlinkSync(
+  fs.cpSync(
     __dirname + "/../viewer/" + viewer,
     publicPath + "viewer",
-    "dir"
+    {recursive: true}
   );
 
   const severHandler = async (request, response) => {
