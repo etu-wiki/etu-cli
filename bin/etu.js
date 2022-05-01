@@ -186,14 +186,28 @@ const startEndpoint = async (port, config, args, previous) => {
   if (args["--ipfs"]) {
     const node = await create();
     const version = await node.version();
-    console.log("Version:", version.version);
 
     for await (const result of node.addAll(getAllFiles(ETU_PATH), {
       cidVersion: 1,
     })) {
       if (result.path === "etu") {
-        console.log(result.path);
-        console.log(result.cid);
+        const stop = Date.now();
+        let message = chalk.green("Present your IIIF image on the fly!\n");
+        message += `\n${chalk.bold("- Time Cost:   ")}  ${
+          (stop - start) / 1000
+        } seconds`;
+        message += `\n${chalk.bold("- IIIF Viewer: ")}  ${viewerName}`;
+        message += `\n${chalk.bold("- IIIF Version:")}  ${iiifVersion}`;
+        message += `\n${chalk.bold("- Local Url:   ")}  http://localhost:8080/ipfs/${ result.cid }`;
+        message += `\n${chalk.bold("- IPFS Url:    ")}  https://ipfs.io/ipfs/${ result.cid }`;
+        console.log(
+          boxen(message, {
+            padding: 1,
+            borderColor: "green",
+            margin: 1,
+          })
+        );
+
       }
     }
   } else {
