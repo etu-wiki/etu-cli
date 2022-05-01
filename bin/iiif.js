@@ -104,20 +104,9 @@ export default async function generateIIIF(
     .toString();
   const present = Mustache.render(template, model);
 
-  const presentFolder = ETU_PATH + "p/" + iiifVersion + "/";
-  mkdir.sync(presentFolder);
-  fs.writeFileSync(presentFolder + presentUuid + ".json", present);
+  // const presentFolder = ETU_PATH + "p/" + iiifVersion + "/";
+  // mkdir.sync(presentFolder);
+  // fs.writeFileSync(presentFolder + presentUuid + ".json", present);
 
-
-  const url =
-    model.baseUrl +
-    "/viewer/index.html?manifest=" +
-    model.baseUrl +
-    "/p/" +
-    iiifVersion +
-    "/" +
-    presentUuid +
-    ".json";
-  // console.log(url);
-  return url;
+  fs.writeFileSync(ETU_PATH + "manifest.json", present);
 }

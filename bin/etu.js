@@ -10,8 +10,6 @@ import { rmSync, existsSync, unlinkSync, readFileSync } from "fs";
 import { promisify } from "util";
 import { networkInterfaces, homedir } from "os";
 
-
-
 // Packages
 import chalk from "chalk";
 import arg from "arg";
@@ -21,6 +19,7 @@ import compression from "compression";
 import inquirer from "inquirer";
 import open from "open";
 import generateIIIF from "./iiif.js";
+import { create } from "ipfs-core";
 
 import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
@@ -35,8 +34,6 @@ const info = (message) => `${chalk.magenta(" INFO:")} ${message}`;
 const error = (message) => `${chalk.red(" ERROR:")} ${message}`;
 
 const ETU_PATH = homedir + "/etu/";
-
-let publicPath;
 
 const getHelp = () => chalk`
   eut - present your IIIF image on the fly
@@ -65,17 +62,11 @@ const getHelp = () => chalk`
 	  --ssl-key                           Optional path to the SSL/TLS certificate\'s private key
 
       --no-port-switching                 Do not open a port other than the one specified when it\'s taken.
+
+      --ipfs                              Export IIIF content to IPFS
 `;
 
-const clearWorkingFolder = () => {
-  if (publicPath == ETU_PATH) {
-    rmSync(publicPath + "i", { recursive: true, force: true });
-    rmSync(publicPath + "p", { recursive: true, force: true });
-  }
-  if (existsSync(publicPath + "viewer")) {
-    rmSync(publicPath + "viewer", { recursive: true, force: true });
-  }
-};
+
 
 const registerShutdown = (fn) => {
   let run = false;
@@ -103,6 +94,42 @@ const getNetworkAddress = () => {
   }
 };
 
+const getAllFiles = (dirPath, originalPath, arrayOfFiles) => {
+  const files = fs.readdirSync(dirPath);
+
+  arrayOfFiles = arrayOfFiles || [];
+  originalPath = originalPath || path.resolve(dirPath, "..");
+
+  const folder = path.relative(originalPath, path.join(dirPath, "/"));
+
+  const root = {
+    path: folder.replace(/\\/g, "/"),
+    mtime: fs.statSync(dirPath).mtime,
+  };
+
+  arrayOfFiles.push(root);
+
+  files.forEach(function (file) {
+    if (fs.statSync(dirPath + "/" + file).isDirectory()) {
+      arrayOfFiles = getAllFiles(
+        dirPath + "/" + file,
+        originalPath,
+        arrayOfFiles
+      );
+    } else {
+      file = path.join(dirPath, "/", file);
+
+      arrayOfFiles.push({
+        path: path.relative(originalPath, file).replace(/\\/g, "/"),
+        content: fs.readFileSync(file),
+        mtime: fs.statSync(file).mtime,
+      });
+    }
+  });
+
+  return arrayOfFiles;
+};
+
 const startEndpoint = async (port, config, args, previous) => {
   const start = Date.now();
 
@@ -124,129 +151,142 @@ const startEndpoint = async (port, config, args, previous) => {
   const { isTTY } = process.stdout;
   const httpMode = args["--ssl-cert"] && args["--ssl-key"] ? "https" : "http";
 
-  let url;
   const baseUrl = `${httpMode}://localhost:${port}`;
+  const url = baseUrl + "/index.html";
+
+  fs.mkdirSync(ETU_PATH, { recursive: true });
+
   if (args["--cookbook"]) {
     const answer = await inquirer.prompt([
       {
         type: "list",
         name: "cookbook",
         message: "Which recipe would you like to choose?",
-        choices: ["Single Image File", "Single Audio File", "Single Video File"],
+        choices: [
+          "Single Image File",
+          "Single Audio File",
+          "Single Video File",
+        ],
       },
     ]);
 
-    publicPath = __dirname + `/../cookbook/${answer.cookbook.replace(/\s/g, '_').toLowerCase()}/`;
-    url =
-      baseUrl +
-      "/viewer/index.html?manifest=" +
-      baseUrl +
-      "/manifest.json";
-    open(url);
+    const cookbookPath =
+      __dirname +
+      `/../cookbook/${answer.cookbook.replace(/\s/g, "_").toLowerCase()}/`;
+    fs.copyFileSync(cookbookPath + "manifest.json", ETU_PATH + "manifest.json");
   } else {
     // generate IIIF content
-    publicPath = ETU_PATH;
-    url = await generateIIIF(entry, viewer, iiifVersion, baseUrl);
-    open(url);
+    await generateIIIF(entry, viewer, iiifVersion, baseUrl);
   }
 
-  config.public = publicPath;
+  config.public = ETU_PATH;
 
-  if (existsSync(publicPath + "viewer")) {
-    rmSync(publicPath + "viewer", { recursive: true, force: true });
-  }
-  fs.cpSync(
-    __dirname + "/../viewer/" + viewer,
-    publicPath + "viewer",
-    {recursive: true}
-  );
+  fs.cpSync(__dirname + "/../viewer/" + viewer, ETU_PATH, { recursive: true });
 
-  const severHandler = async (request, response) => {
-    if (args["--cors"]) {
-      response.setHeader("Access-Control-Allow-Origin", "*");
-    }
-    await compressionHandler(request, response);
+  if (args["--ipfs"]) {
+    const node = await create();
+    const version = await node.version();
+    console.log("Version:", version.version);
 
-    return handler(request, response, config);
-  };
-
-  const server =
-    httpMode === "https"
-      ? createSecureHttpSever(
-          {
-            key: readFileSync(args["--ssl-key"]),
-            cert: readFileSync(args["--ssl-cert"]),
-          },
-          severHandler
-        )
-      : createHttpServer(severHandler);
-
-  server.on("error", (err) => {
-    if (
-      err.code === "EADDRINUSE" &&
-      !isNaN(port) &&
-      args["--no-port-switching"] !== true
-    ) {
-      startEndpoint(0, config, args, port);
-      return;
-    }
-
-    console.error(error(`Failed to etu: ${err.stack}`));
-    process.exit(1);
-  });
-
-  server.listen(port, async () => {
-    const details = server.address();
-    registerShutdown(() => server.close());
-
-    let localAddress = null;
-    let networkAddress = null;
-
-    if (typeof details === "string") {
-      localAddress = details;
-    } else if (typeof details === "object" && details.port) {
-      const address = details.address === "::" ? "localhost" : details.address;
-      const ip = getNetworkAddress();
-
-      localAddress = `${httpMode}://${address}:${details.port}`;
-      networkAddress = ip ? `${httpMode}://${ip}:${details.port}` : null;
-    }
-    console.log(info(`Accepting connections on ${localAddress}`));
-    try {
-      const stop = Date.now();
-      if (isTTY && process.env.NODE_ENV !== "production") {
-        let message = chalk.green("Present your IIIF image on the fly!\n");
-        message += `\n${chalk.bold("- Time Cost:   ")}  ${
-          (stop - start) / 1000
-        } seconds`;
-        message += `\n${chalk.bold("- IIIF Viewer: ")}  ${viewerName}`;
-        message += `\n${chalk.bold("- IIIF Version:")}  ${iiifVersion}`;
-        message += `\n${chalk.bold("- Viewer Url:  ")}  ${url}`;
-        if (previous) {
-          message += chalk.red(
-            `\n\nThis port was picked because ${chalk.underline(
-              previous
-            )} is in use.`
-          );
-        }
-        console.log(
-          boxen(message, {
-            padding: 1,
-            borderColor: "green",
-            margin: 1,
-          })
-        );
-      } else {
-        const suffix = localAddress ? ` at ${localAddress}` : "";
-        console.log(info(`Accepting connections${suffix}`));
+    for await (const result of node.addAll(getAllFiles(ETU_PATH), {
+      cidVersion: 1,
+    })) {
+      if (result.path === "etu") {
+        console.log(result.path);
+        console.log(result.cid);
       }
-    } catch (err) {
-      console.log(error(err.message));
     }
-  });
+  } else {
+    const severHandler = async (request, response) => {
+      if (args["--cors"]) {
+        response.setHeader("Access-Control-Allow-Origin", "*");
+      }
+      await compressionHandler(request, response);
+
+      return handler(request, response, config);
+    };
+
+    const server =
+      httpMode === "https"
+        ? createSecureHttpSever(
+            {
+              key: readFileSync(args["--ssl-key"]),
+              cert: readFileSync(args["--ssl-cert"]),
+            },
+            severHandler
+          )
+        : createHttpServer(severHandler);
+
+    server.on("error", (err) => {
+      if (
+        err.code === "EADDRINUSE" &&
+        !isNaN(port) &&
+        args["--no-port-switching"] !== true
+      ) {
+        startEndpoint(0, config, args, port);
+        return;
+      }
+
+      console.error(error(`Failed to etu: ${err.stack}`));
+      process.exit(1);
+    });
+
+    server.listen(port, async () => {
+      const details = server.address();
+      registerShutdown(() => server.close());
+
+      let localAddress = null;
+      let networkAddress = null;
+
+      if (typeof details === "string") {
+        localAddress = details;
+      } else if (typeof details === "object" && details.port) {
+        const address =
+          details.address === "::" ? "localhost" : details.address;
+        const ip = getNetworkAddress();
+
+        localAddress = `${httpMode}://${address}:${details.port}`;
+        networkAddress = ip ? `${httpMode}://${ip}:${details.port}` : null;
+      }
+      console.log(info(`Accepting connections on ${localAddress}`));
+      try {
+        const stop = Date.now();
+        if (isTTY && process.env.NODE_ENV !== "production") {
+          let message = chalk.green("Present your IIIF image on the fly!\n");
+          message += `\n${chalk.bold("- Time Cost:   ")}  ${
+            (stop - start) / 1000
+          } seconds`;
+          message += `\n${chalk.bold("- IIIF Viewer: ")}  ${viewerName}`;
+          message += `\n${chalk.bold("- IIIF Version:")}  ${iiifVersion}`;
+          message += `\n${chalk.bold("- Viewer Url:  ")}  ${url}`;
+          if (previous) {
+            message += chalk.red(
+              `\n\nThis port was picked because ${chalk.underline(
+                previous
+              )} is in use.`
+            );
+          }
+          console.log(
+            boxen(message, {
+              padding: 1,
+              borderColor: "green",
+              margin: 1,
+            })
+          );
+        } else {
+          const suffix = localAddress ? ` at ${localAddress}` : "";
+          console.log(info(`Accepting connections${suffix}`));
+        }
+      } catch (err) {
+        console.log(error(err.message));
+      }
+
+      open(url);
+    });
+  }
 };
 
-clearWorkingFolder();
+rmSync(ETU_PATH, { recursive: true, force: true });
 
 let args = null;
 
@@ -260,6 +300,7 @@ try {
     "--no-port-switching": Boolean,
     "--ssl-cert": String,
     "--ssl-key": String,
+    "--ipfs": Boolean,
     "-h": "--help",
     "-v": "--viewer",
     "-C": "--cors",
@@ -294,7 +335,7 @@ await startEndpoint(args["--port"], config, args);
 
 registerShutdown(() => {
   console.log(`\n${info("Gracefully shutting down. Please wait...")}`);
-  clearWorkingFolder();
+  rmSync(ETU_PATH, { recursive: true, force: true });
   process.on("SIGINT", () => {
     console.log(`\n${warning("Force-closing all open sockets...")}`);
     process.exit(0);

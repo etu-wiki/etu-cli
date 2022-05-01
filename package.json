@@ -24,6 +24,7 @@
     "chalk": "^5.0.1",
     "compression": "^1.7.4",
     "inquirer": "^8.2.2",
+    "ipfs-core": "^0.14.3",
     "jimp": "^0.16.1",
     "make-dir": "^3.1.0",
     "mustache": "^4.2.0",
