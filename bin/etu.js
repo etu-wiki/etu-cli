@@ -20,6 +20,7 @@ import inquirer from "inquirer";
 import open from "open";
 import generateIIIF from "./iiif.js";
 import { create } from "ipfs-core";
+import { HttpGateway } from "ipfs-http-gateway";
 
 import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
@@ -65,8 +66,6 @@ const getHelp = () => chalk`
 
       --ipfs                              Export IIIF content to IPFS
 `;
-
-
 
 const registerShutdown = (fn) => {
   let run = false;
@@ -184,13 +183,18 @@ const startEndpoint = async (port, config, args, previous) => {
   fs.cpSync(__dirname + "/../viewer/" + viewer, ETU_PATH, { recursive: true });
 
   if (args["--ipfs"]) {
-    const node = await create();
-    const version = await node.version();
+    const ipfs = await create();
+    const id = await ipfs.id()
+    console.log(id.id)
+    const gateway = new HttpGateway(ipfs)
+    await gateway.start()
 
-    for await (const result of node.addAll(getAllFiles(ETU_PATH), {
+    registerShutdown(async () => {await ipfs.stop(); await gateway.stop()});
+    for await (const result of ipfs.addAll(getAllFiles(ETU_PATH), {
       cidVersion: 1,
     })) {
       if (result.path === "etu") {
+        const localUrl = `http://localhost:9090/ipfs/${ result.cid }`
         const stop = Date.now();
         let message = chalk.green("Present your IIIF image on the fly!\n");
         message += `\n${chalk.bold("- Time Cost:   ")}  ${
@@ -198,7 +202,7 @@ const startEndpoint = async (port, config, args, previous) => {
         } seconds`;
         message += `\n${chalk.bold("- IIIF Viewer: ")}  ${viewerName}`;
         message += `\n${chalk.bold("- IIIF Version:")}  ${iiifVersion}`;
-        message += `\n${chalk.bold("- Local Url:   ")}  http://localhost:8080/ipfs/${ result.cid }`;
+        message += `\n${chalk.bold("- Local Url:   ")}  ${localUrl}`;
         message += `\n${chalk.bold("- IPFS Url:    ")}  https://ipfs.io/ipfs/${ result.cid }`;
         console.log(
           boxen(message, {
@@ -207,7 +211,8 @@ const startEndpoint = async (port, config, args, previous) => {
             margin: 1,
           })
         );
-
+        open(localUrl);
+        break;
       }
     }
   } else {
