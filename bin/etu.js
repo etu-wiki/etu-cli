@@ -11,6 +11,7 @@ import { promisify } from "util";
 import { networkInterfaces, homedir } from "os";
 
 // Packages
+import ora from "ora";
 import chalk from "chalk";
 import arg from "arg";
 import handler from "serve-handler";
@@ -183,38 +184,50 @@ const startEndpoint = async (port, config, args, previous) => {
   fs.cpSync(__dirname + "/../viewer/" + viewer, ETU_PATH, { recursive: true });
 
   if (args["--ipfs"]) {
-    const ipfs = await create();
-    const id = await ipfs.id()
-    console.log(id.id)
-    const gateway = new HttpGateway(ipfs)
-    await gateway.start()
-
-    registerShutdown(async () => {await ipfs.stop(); await gateway.stop()});
-    for await (const result of ipfs.addAll(getAllFiles(ETU_PATH), {
-      cidVersion: 1,
-    })) {
-      if (result.path === "etu") {
-        const localUrl = `http://localhost:9090/ipfs/${ result.cid }`
-        const stop = Date.now();
-        let message = chalk.green("Present your IIIF image on the fly!\n");
-        message += `\n${chalk.bold("- Time Cost:   ")}  ${
-          (stop - start) / 1000
-        } seconds`;
-        message += `\n${chalk.bold("- IIIF Viewer: ")}  ${viewerName}`;
-        message += `\n${chalk.bold("- IIIF Version:")}  ${iiifVersion}`;
-        message += `\n${chalk.bold("- Local Url:   ")}  ${localUrl}`;
-        message += `\n${chalk.bold("- IPFS Url:    ")}  https://ipfs.io/ipfs/${ result.cid }`;
-        console.log(
-          boxen(message, {
-            padding: 1,
-            borderColor: "green",
-            margin: 1,
-          })
-        );
-        open(localUrl);
-        break;
+    if (viewer === "m3") {
+      const ipfs = await create();
+      const id = await ipfs.id()
+      console.log(id.id)
+      const gateway = new HttpGateway(ipfs)
+      await gateway.start()
+  
+      registerShutdown(async () => {await ipfs.stop(); await gateway.stop()});
+  
+      const spinner = ora(`Adding to IPFS`).start();
+      let etuCID
+      for await (const result of ipfs.addAll(getAllFiles(ETU_PATH), {
+        cidVersion: 1,
+      })) {
+        if (result.path === "etu") {
+          etuCID = result.cid
+          break;
+        }
       }
+      spinner.stop()
+  
+      const localUrl = `http://localhost:9090/ipfs/${ etuCID }`
+      const ipfsUrl = `https://ipfs.io/ipfs/${ etuCID }`
+      const stop = Date.now();
+      let message = chalk.green("Present your IIIF image on the fly!\n");
+      message += `\n${chalk.bold("- Time Cost:   ")}  ${
+        (stop - start) / 1000
+      } seconds`;
+      message += `\n${chalk.bold("- IIIF Viewer: ")}  ${viewerName}`;
+      message += `\n${chalk.bold("- IIIF Version:")}  ${iiifVersion}`;
+      message += `\n${chalk.bold("- Local Url:   ")}  ${localUrl}`;
+      message += `\n${chalk.bold("- IPFS Url:    ")}  ${ipfsUrl}`;
+      console.log(
+        boxen(message, {
+          padding: 1,
+          borderColor: "green",
+          margin: 1,
+        })
+      );
+      open(localUrl);
+    } else {
+      console.log(warning(`Currenntly IPFS support Mirador3 only.`));
     }
+
   } else {
     const severHandler = async (request, response) => {
       if (args["--cors"]) {
