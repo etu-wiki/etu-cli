@@ -3,7 +3,6 @@ import os from "os";
 import path from "path";
 
 import ora from "ora";
-import mkdir from "make-dir";
 import Mustache from "mustache";
 import { v4 as uuid } from "uuid";
 
@@ -75,7 +74,7 @@ export default async function generateIIIF(
       item.etag = uuid();
 
       const imageFolder = ETU_PATH + "i/" + iiifVersion + "/";
-      mkdir.sync(imageFolder);
+      fs.mkdirSync(imageFolder, {recursive: true});
 
       // Code for Jimp
       item.level0 = true;
@@ -103,10 +102,6 @@ export default async function generateIIIF(
     .readFileSync(__dirname + "/../template/present" + iiifVersion + ".mustache")
     .toString();
   const present = Mustache.render(template, model);
-
-  // const presentFolder = ETU_PATH + "p/" + iiifVersion + "/";
-  // mkdir.sync(presentFolder);
-  // fs.writeFileSync(presentFolder + presentUuid + ".json", present);
 
   fs.writeFileSync(ETU_PATH + "manifest.json", present);
 }
