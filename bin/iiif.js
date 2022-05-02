@@ -29,7 +29,6 @@ function addLastMark(arr) {
 
 export default async function generateIIIF(
   entry,
-  viewer,
   iiifVersion,
   baseUrl
 ) {

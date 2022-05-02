@@ -176,7 +176,7 @@ const startEndpoint = async (port, config, args, previous) => {
     fs.copyFileSync(cookbookPath + "manifest.json", ETU_PATH + "manifest.json");
   } else {
     // generate IIIF content
-    await generateIIIF(entry, viewer, iiifVersion, baseUrl);
+    await generateIIIF(entry, iiifVersion, baseUrl);
   }
 
   config.public = ETU_PATH;
@@ -190,6 +190,11 @@ const startEndpoint = async (port, config, args, previous) => {
       console.log(id.id)
       const gateway = new HttpGateway(ipfs)
       await gateway.start()
+
+      const config = await ipfs.config.getAll()
+      const addresses = config.Addresses || { Swarm: [], Gateway: [] }
+      const gatewayAddrs = addresses?.Gateway || []
+      console.log(gatewayAddrs)
   
       registerShutdown(async () => {await ipfs.stop(); await gateway.stop()});
   
@@ -207,6 +212,8 @@ const startEndpoint = async (port, config, args, previous) => {
   
       const localUrl = `http://localhost:9090/ipfs/${ etuCID }`
       const ipfsUrl = `https://ipfs.io/ipfs/${ etuCID }`
+      console.log(localUrl)
+      console.log(ipfsUrl)
       const stop = Date.now();
       let message = chalk.green("Present your IIIF image on the fly!\n");
       message += `\n${chalk.bold("- Time Cost:   ")}  ${
