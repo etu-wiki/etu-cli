@@ -15,7 +15,6 @@ import ora from "ora";
 import chalk from "chalk";
 import arg from "arg";
 import handler from "serve-handler";
-import boxen from "boxen";
 import compression from "compression";
 import inquirer from "inquirer";
 import open from "open";
@@ -31,9 +30,9 @@ const __dirname = path.dirname(__filename);
 const compressionHandler = promisify(compression());
 const interfaces = networkInterfaces();
 
-const warning = (message) => `${chalk.yellow(" WARNING:")} ${message}`;
-const info = (message) => `${chalk.magenta(" INFO:")} ${message}`;
-const error = (message) => `${chalk.red(" ERROR:")} ${message}`;
+const warning = (message) => `${chalk.yellow("WARNING:")} ${message}`;
+const info = (message) => `${chalk.magenta("INFO:")} ${message}`;
+const error = (message) => `${chalk.red("ERROR:")} ${message}`;
 
 const ETU_PATH = homedir + "/etu/";
 
@@ -59,9 +58,9 @@ const getHelp = () => chalk`
 
       -C, --cors                          Enable CORS, sets \`Access-Control-Allow-Origin\` to \`*\`
 	  
-	  --ssl-cert                          Optional path to an SSL/TLS certificate to etu with HTTPS
+      --ssl-cert                          Optional path to an SSL/TLS certificate to etu with HTTPS
 	  
-	  --ssl-key                           Optional path to the SSL/TLS certificate\'s private key
+      --ssl-key                           Optional path to the SSL/TLS certificate\'s private key
 
       --no-port-switching                 Do not open a port other than the one specified when it\'s taken.
 
@@ -215,7 +214,7 @@ const startEndpoint = async (port, config, args, previous) => {
       console.log(localUrl)
       console.log(ipfsUrl)
       const stop = Date.now();
-      let message = chalk.green("Present your IIIF image on the fly!\n");
+      let message = chalk.green("\nPresent your IIIF image on the fly!\n");
       message += `\n${chalk.bold("- Time Cost:   ")}  ${
         (stop - start) / 1000
       } seconds`;
@@ -223,13 +222,14 @@ const startEndpoint = async (port, config, args, previous) => {
       message += `\n${chalk.bold("- IIIF Version:")}  ${iiifVersion}`;
       message += `\n${chalk.bold("- Local Url:   ")}  ${localUrl}`;
       message += `\n${chalk.bold("- IPFS Url:    ")}  ${ipfsUrl}`;
-      console.log(
-        boxen(message, {
-          padding: 1,
-          borderColor: "green",
-          margin: 1,
-        })
-      );
+      // console.log(
+      //   boxen(message, {
+      //     padding: 1,
+      //     borderColor: "green",
+      //     margin: 1,
+      //   })
+      // );
+      console.log(message)
       open(localUrl);
     } else {
       console.log(warning(`Currenntly IPFS support Mirador3 only.`));
@@ -291,7 +291,7 @@ const startEndpoint = async (port, config, args, previous) => {
       try {
         const stop = Date.now();
         if (isTTY && process.env.NODE_ENV !== "production") {
-          let message = chalk.green("Present your IIIF image on the fly!\n");
+          let message = chalk.green("\nPresent your IIIF image on the fly!\n");
           message += `\n${chalk.bold("- Time Cost:   ")}  ${
             (stop - start) / 1000
           } seconds`;
@@ -305,13 +305,14 @@ const startEndpoint = async (port, config, args, previous) => {
               )} is in use.`
             );
           }
-          console.log(
-            boxen(message, {
-              padding: 1,
-              borderColor: "green",
-              margin: 1,
-            })
-          );
+          // console.log(
+          //   boxen(message, {
+          //     padding: 1,
+          //     borderColor: "green",
+          //     margin: 1,
+          //   })
+          // );
+          console.log(message)
         } else {
           const suffix = localAddress ? ` at ${localAddress}` : "";
           console.log(info(`Accepting connections${suffix}`));

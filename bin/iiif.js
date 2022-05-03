@@ -7,9 +7,9 @@ import Mustache from "mustache";
 import { v4 as uuid } from "uuid";
 
 import chalk from "chalk";
-const warning = (message) => `${chalk.yellow(" WARNING:")} ${message}`;
-const info = (message) => `${chalk.magenta(" INFO:")} ${message}`;
-const error = (message) => `${chalk.red(" ERROR:")} ${message}`;
+const warning = (message) => `${chalk.yellow("WARNING:")} ${message}`;
+const info = (message) => `${chalk.magenta("INFO:")} ${message}`;
+const error = (message) => `${chalk.red("ERROR:")} ${message}`;
 
 import Jimp from "jimp";
 

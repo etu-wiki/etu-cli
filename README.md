@@ -8,7 +8,13 @@ You can also use [npm](https://www.npmjs.com/) instead, if you'd like:
 npm install -g etu-cli
 ```
 
-Once that's done, you can run this command inside your project's directory...
+If you prefer, you can also install the package globally using [Yarn](https://yarnpkg.com/en/) (you'll need at least [Node.js LTS](https://nodejs.org/en/)):
+
+```bash
+yarn global add etu-cli
+```
+
+Once that's done, you can run this command inside any folder that contains images...
 
 ```bash
 etu
