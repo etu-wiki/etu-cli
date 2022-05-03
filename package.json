@@ -6,8 +6,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "IIIF China",
   "files": [
     "bin",
     "viewer",
@@ -17,6 +16,7 @@
   "bin": {
     "etu": "./bin/etu.js"
   },
+  "license": "MIT License",
   "type": "module",
   "dependencies": {
     "arg": "^5.0.1",
