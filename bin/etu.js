@@ -165,6 +165,12 @@ const startEndpoint = async (port, config, args, previous) => {
           "Single Image File",
           "Single Audio File",
           "Single Video File",
+          "0024-book-4-toc",
+          "0046-rendering",
+          "0139-geolocate-canvas-fragment",
+          "0219-using-caption-file",
+          "0230-navdate",
+          "0234-provider",
         ],
       },
     ]);
