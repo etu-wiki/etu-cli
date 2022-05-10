@@ -162,9 +162,13 @@ const startEndpoint = async (port, config, args, previous) => {
         name: "cookbook",
         message: "Which recipe would you like to choose?",
         choices: [
-          "Single Image File",
-          "Single Audio File",
-          "Single Video File",
+          "0001-mvm-image",
+          "0002-mvm-audio",
+          "0003-mvm-video",
+          "0004-canvas-size",
+          "0005-image-service",
+          "0006-text-language",
+          "0009-book-1",
           "0024-book-4-toc",
           "0046-rendering",
           "0139-geolocate-canvas-fragment",
@@ -177,7 +181,7 @@ const startEndpoint = async (port, config, args, previous) => {
 
     const cookbookPath =
       __dirname +
-      `/../cookbook/${answer.cookbook.replace(/\s/g, "_").toLowerCase()}/`;
+      `/../cookbook/${answer.cookbook}/`;
     fs.copyFileSync(cookbookPath + "manifest.json", ETU_PATH + "manifest.json");
   } else {
     // generate IIIF content
