@@ -169,6 +169,7 @@ const startEndpoint = async (port, config, args, previous) => {
           "0005-image-service",
           "0006-text-language",
           "0009-book-1",
+          "0010-book-2-viewing-direction",
           "0024-book-4-toc",
           "0046-rendering",
           "0139-geolocate-canvas-fragment",
