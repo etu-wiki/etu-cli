@@ -26,6 +26,7 @@
     "arg": "^5.0.1",
     "chalk": "^5.0.1",
     "compression": "^1.7.4",
+    "iiif-image-shims": "^1.0.22",
     "inquirer": "^8.2.2",
     "ipfs-core": "^0.14.3",
     "ipfs-http-gateway": "^0.9.3",

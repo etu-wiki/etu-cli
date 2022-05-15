@@ -12,6 +12,7 @@ const info = (message) => `${chalk.magenta("INFO:")} ${message}`;
 const error = (message) => `${chalk.red("ERROR:")} ${message}`;
 
 import Jimp from "jimp";
+import IiifImageShims from "iiif-image-shims";
 
 import {fileURLToPath} from 'url';
 const __filename = fileURLToPath(import.meta.url);
@@ -84,6 +85,23 @@ export default async function generateIIIF(
         spinner.stop();
       } else {
         fs.copyFileSync(sourceFile, fullImage);
+      }
+
+      // Add info.json and thumbnail for IIIF 2
+      if (iiifVersion === "2") {
+        console.log(info(`Convert ${sourceFile}`));
+        const processor = new IiifImageShims("2.1", "0", ".jpg");
+
+        const imageInfo = processor.generateImageInfoTemp(
+          model.baseUrl + "/i/" + iiifVersion + "/" + item.etag,
+          { width: item.width, height: item.height }
+        );
+
+        fs.mkdirSync(imageFolder + item.etag, {recursive: true});
+        fs.writeFileSync(
+          imageFolder + item.etag + "/info.json",
+          JSON.stringify(imageInfo.info)
+        );
       }
 
       items.push(item);
