@@ -26,6 +26,7 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const pkg = JSON.parse(fs.readFileSync(__dirname + '/../package.json'));
 // Utilities
 const compressionHandler = promisify(compression());
 const interfaces = networkInterfaces();
@@ -52,9 +53,11 @@ const getHelp = () => chalk`
 
       --help                              Shows this help message
 
+      -v, --version                       Displays the current version of serve
+
       --cookbook                          Run IIIF Cookbook recipe in etu
 
-      -v, --viewer                        Choose the viewer: m3(mirador3), uv(universal viewer)
+      -V, --viewer                        Choose the viewer: m3(mirador3), uv(universal viewer)
       
       -p, --port                          Specify a port on which to listen
 
@@ -373,6 +376,7 @@ let args = null;
 try {
   args = arg({
     "--help": Boolean,
+    '--version': Boolean,
     "--viewer": String,
     "--cookbook": Boolean,
     "--port": String,
@@ -382,7 +386,8 @@ try {
     "--ssl-key": String,
     "--ipfs": Boolean,
     "-h": "--help",
-    "-v": "--viewer",
+    "-v": "--version",
+    "-V": "--viewer",
     "-C": "--cors",
     "-p": "--port",
   });
@@ -393,6 +398,11 @@ try {
 
 if (args["--help"]) {
   console.log(getHelp());
+  process.exit(0);
+}
+
+if (args['--version']) {
+  console.log(pkg.version);
   process.exit(0);
 }
 
