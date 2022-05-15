@@ -54,6 +54,8 @@ const getHelp = () => chalk`
 
       --cookbook                          Run IIIF Cookbook recipe in etu
 
+      -v, --viewer                        Choose the viewer: m3(mirador3), uv(universal viewer)
+      
       -p, --port                          Specify a port on which to listen
 
       -C, --cors                          Enable CORS, sets \`Access-Control-Allow-Origin\` to \`*\`
@@ -139,6 +141,19 @@ const startEndpoint = async (port, config, args, previous) => {
   let viewerName = "Mirador 3";
   let iiifVersion = 3;
 
+  switch (viewer) {
+    case "m3":
+      viewerName = "Mirador 3";
+      iiifVersion = "3";
+      break;
+    case "uv":
+      viewerName = "Universal Viewer";
+      iiifVersion = "2";
+      break;
+    default:
+      throw Error("invalid viewer type");
+  }
+
   // Nevigate to index if file not found
   config.rewrites = [
     {
@@ -146,6 +161,15 @@ const startEndpoint = async (port, config, args, previous) => {
       destination: "/viewer/index.html",
     },
   ];
+
+  if (iiifVersion === "2") {
+    config.redirects = [
+      {
+        source: "/i/2/:id/full/:width/0/default.jpg",
+        destination: "/i/2/:id.jpg",
+      },
+    ];
+  }
 
   const { isTTY } = process.stdout;
   const httpMode = args["--ssl-cert"] && args["--ssl-key"] ? "https" : "http";
