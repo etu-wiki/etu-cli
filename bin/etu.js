@@ -188,7 +188,23 @@ const startEndpoint = async (port, config, args, previous) => {
     const cookbookPath =
       __dirname +
       `/../cookbook/${answer.cookbook}/`;
-    fs.copyFileSync(cookbookPath + "manifest.json", ETU_PATH + "manifest.json");
+    function traverseFolder(dirPath,list=[]){
+      fs.readdirSync(dirPath).forEach(function(item){
+        let fullpath = path.join(dirPath,item);
+        let stats = fs.statSync(fullpath);
+        if(stats.isDirectory()){
+          traverseFolder(fullpath,list);
+        }else{
+          list.push(fullpath);
+        }
+      });
+      return list;
+    }
+    const jsonList = traverseFolder(cookbookPath);
+    console.log(jsonList);
+    for (let i = 0; i < jsonList.length; i++){
+      fs.copyFileSync(jsonList[i], ETU_PATH + "manifest.json");
+    }    
   } else {
     // generate IIIF content
     await generateIIIF(entry, iiifVersion, baseUrl);
