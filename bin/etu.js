@@ -11,6 +11,7 @@ import {
   readFileSync,
   readdirSync,
   statSync,
+  existsSync,
   mkdirSync,
   copyFileSync,
   cpSync,
@@ -73,6 +74,10 @@ const getHelp = () => chalk`
       -i, --import                        Import etu bundle from a local file (extension not included)
       
       -e, --export                        Export etu bundle to a local file (extension not included)
+
+      -d, --durable                       Don't delete the temporary directory after the process ends
+      
+      -c, --clear                         Clear the temporary directory existed from last session
 
       -p, --port                          Specify a port on which to listen
 
@@ -152,9 +157,6 @@ const getAllFiles = (dirPath, originalPath, arrayOfFiles) => {
 const startEndpoint = async (port, config, args, previous) => {
   const start = Date.now();
 
-  const cwd = process.cwd();
-  const entry = args._.length > 0 ? resolve(args._[0]) : cwd;
-
   const httpMode = args["--ssl-cert"] && args["--ssl-key"] ? "https" : "http";
   const baseUrl = `${httpMode}://localhost:${port}`;
 
@@ -175,66 +177,83 @@ const startEndpoint = async (port, config, args, previous) => {
       throw Error("invalid viewer type");
   }
 
-  // preparing raw material
-  if (args["--import"]) {
-    const importFileName = args["--import"] + ".etu";
-    await tar.x({ file: importFileName, C: homedir + "/" });
-    console.log(homedir + "/");
+  if (existsSync(ETU_PATH)) {
+    console.log(info("loading existing etu bundle"));
+    console.log(info("use --clear to delete the existing etu bundle"));
   } else {
-    if (args["--cookbook"]) {
-      const answer = await inquirer.prompt([
-        {
-          type: "list",
-          name: "cookbook",
-          message: "Which recipe would you like to choose?",
-          choices: [
-            "0001-mvm-image",
-            "0002-mvm-audio",
-            "0003-mvm-video",
-            "0004-canvas-size",
-            "0005-image-service",
-            "0006-text-language",
-            "0009-book-1",
-            "0010-book-2-viewing-direction",
-            "0013-placeholderCanvas",
-            "0014-accompanyingcanvas",
-            "0015-start",
-            "0024-book-4-toc",
-            "0046-rendering",
-            "0117-add-image-thumbnail",
-            "0139-geolocate-canvas-fragment",
-            "0219-using-caption-file",
-            "0202-start-canvas",
-            "0230-navdate",
-            "0234-provider",
-          ],
-        },
-      ]);
-
-      const cookbookPath = __dirname + `/../cookbook/${answer.cookbook}/`;
-      function traverseFolder(dirPath, list = []) {
-        readdirSync(dirPath).forEach(function (item) {
-          let fullpath = path.join(dirPath, item);
-          let stats = statSync(fullpath);
-          if (stats.isDirectory()) {
-            traverseFolder(fullpath, list);
-          } else {
-            list.push(fullpath);
-          }
-        });
-        return list;
-      }
-      const jsonList = traverseFolder(cookbookPath);
-      console.log(jsonList);
-      for (let i = 0; i < jsonList.length; i++) {
-        copyFileSync(jsonList[i], ETU_PATH + "manifest.json");
-      }
+    // preparing raw material
+    if (args["--import"]) {
+      const importFileName = args["--import"] + ".etu";
+      await tar.x({ file: importFileName, C: homedir + "/" });
+      console.log(homedir + "/");
     } else {
-      // generate IIIF content
-      await generateIIIF(entry, iiifVersion, baseUrl);
-    }
+      if (args["--cookbook"]) {
+        const answer = await inquirer.prompt([
+          {
+            type: "list",
+            name: "cookbook",
+            message: "Which recipe would you like to choose?",
+            choices: [
+              "0001-mvm-image",
+              "0002-mvm-audio",
+              "0003-mvm-video",
+              "0004-canvas-size",
+              "0005-image-service",
+              "0006-text-language",
+              "0009-book-1",
+              "0010-book-2-viewing-direction",
+              "0013-placeholderCanvas",
+              "0014-accompanyingcanvas",
+              "0015-start",
+              "0024-book-4-toc",
+              "0046-rendering",
+              "0117-add-image-thumbnail",
+              "0139-geolocate-canvas-fragment",
+              "0219-using-caption-file",
+              "0202-start-canvas",
+              "0230-navdate",
+              "0234-provider",
+            ],
+          },
+        ]);
 
-    cpSync(__dirname + "/../viewer/" + viewer, ETU_PATH, { recursive: true });
+        const cookbookPath = __dirname + `/../cookbook/${answer.cookbook}/`;
+        function traverseFolder(dirPath, list = []) {
+          readdirSync(dirPath).forEach(function (item) {
+            let fullpath = path.join(dirPath, item);
+            let stats = statSync(fullpath);
+            if (stats.isDirectory()) {
+              traverseFolder(fullpath, list);
+            } else {
+              list.push(fullpath);
+            }
+          });
+          return list;
+        }
+        const jsonList = traverseFolder(cookbookPath);
+        console.log(jsonList);
+        for (let i = 0; i < jsonList.length; i++) {
+          copyFileSync(jsonList[i], ETU_PATH + "manifest.json");
+        }
+      } else {
+        const cwd = process.cwd();
+        // const entry = args._.length > 0 ? resolve(args._[0]) : cwd;
+        if (args._[0]) {
+          // generate IIIF content
+          await generateIIIF(resolve(args._[0]), iiifVersion, baseUrl);
+        }
+      }
+
+      cpSync(__dirname + "/../viewer/" + viewer, ETU_PATH, { recursive: true });
+    }
+  }
+
+  if (args["--export"]) {
+    let exportFileName = args["--export"] || "etu";
+    await tar.c(
+      { gzip: true, C: homedir + "/", file: exportFileName + ".etu" },
+      ["etu"]
+    );
   }
 
   if (args["--ipfs"]) {
@@ -278,6 +297,7 @@ const startEndpoint = async (port, config, args, previous) => {
       } seconds`;
       message += `\n${chalk.bold("- IIIF Viewer: ")}  ${viewerName}`;
       message += `\n${chalk.bold("- IIIF Version:")}  ${iiifVersion}`;
+      message += `\n${chalk.bold("- CID:         ")}  ${etuCID}`;
       message += `\n${chalk.bold("- Local Url:   ")}  ${localUrl}`;
       message += `\n${chalk.bold("- IPFS Url:    ")}  ${ipfsUrl}`;
       // console.log(
@@ -292,12 +312,6 @@ const startEndpoint = async (port, config, args, previous) => {
     } else {
       console.log(warning(`Currenntly IPFS support Mirador3 only.`));
     }
-  } else if (args["--export"]) {
-    let exportFileName = args["--export"] || "etu";
-    await tar.c(
-      { gzip: true, C: homedir + "/", file: exportFileName + ".etu" },
-      ["etu"]
-    );
   } else {
     // Nevigate to index if file not found
     config.rewrites = [
@@ -413,14 +427,14 @@ const startEndpoint = async (port, config, args, previous) => {
   }
 };
 
-rmSync(ETU_PATH, { recursive: true, force: true });
-
 let args = null;
 
 try {
   args = arg({
     "--help": Boolean,
     "--version": Boolean,
+    "--durable": Boolean,
+    "--clear": Boolean,
     "--viewer": String,
     "--import": String,
     "--export": String,
@@ -433,6 +447,8 @@ try {
     "--ipfs": Boolean,
     "-h": "--help",
     "-v": "--version",
+    "-d": "--durable",
+    "-c": "--clear",
     "-V": "--viewer",
     "-i": "--import",
     "-e": "--export",
@@ -459,9 +475,14 @@ if (!args["--port"]) {
   args["--port"] = process.env.PORT || 3000;
 }
 
-if (args._.length > 1) {
-  console.error(error("Please provide one path argument at maximum"));
-  process.exit(1);
+// if (args._.length > 1) {
+//   console.error(error("Please provide one path argument at maximum"));
+//   process.exit(1);
+// }
+
+if (args["--clear"]) {
+  rmSync(ETU_PATH, { recursive: true, force: true });
+  process.exit(0);
 }
 
 const config = {};
@@ -473,7 +494,10 @@ await startEndpoint(args["--port"], config, args);
 
 registerShutdown(() => {
   console.log(`\n${info("Gracefully shutting down. Please wait...")}`);
-  rmSync(ETU_PATH, { recursive: true, force: true });
+  if (!args["--durable"]) {
+    rmSync(ETU_PATH, { recursive: true, force: true });
+  }
+
   process.on("SIGINT", () => {
     console.log(`\n${warning("Force-closing all open sockets...")}`);
     process.exit(0);

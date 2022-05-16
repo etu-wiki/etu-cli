@@ -32,6 +32,34 @@ etu folder_name
 etu sample.jpg
 ```
 
+You can also import/export etu files to one package file which is portable.
+```bash
+etu sample.jpg --export sample
+```
+```bash
+etu --import sample
+```
+
+IPFS is supported as well.
+```bash
+etu sample.jpg --ipfs
+```
+
+By default etu files will be cleared each time local server is closed. To avoid that, use --durable option.
+```bash
+etu sample.jpg --durable
+```
+
+To resume durable etu session, use previous cmd again or simple use etu --durable
+```bash
+etu --durable
+```
+
+To clear etu session, use previous cmd again or simple use etu --durable
+```bash
+etu --clear
+```
+
 Finally, run this command to see a list of all available options:
 
 ```bash
