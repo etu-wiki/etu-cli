@@ -14,13 +14,7 @@ If you prefer, you can also install the package globally using [Yarn](https://ya
 yarn global add etu-cli
 ```
 
-Once that's done, you can run this command inside any folder that contains images...
-
-```bash
-etu
-```
-
-...or specify which folder you want to serve:
+Once that's done, you can specify which folder you want to serve:
 
 ```bash
 etu folder_name
@@ -32,7 +26,8 @@ etu folder_name
 etu sample.jpg
 ```
 
-You can also import/export etu files to one package file which is portable.
+You can also import/export etu files to one package file which is portable
+
 ```bash
 etu sample.jpg --export sample
 ```
@@ -41,16 +36,19 @@ etu --import sample
 ```
 
 IPFS is supported as well.
+
 ```bash
 etu sample.jpg --ipfs
 ```
 
-By default etu files will be cleared each time local server is closed. To avoid that, use --durable option.
+By default etu files will be cleared each time local server is closed. To avoid that, use --durable option
+
 ```bash
 etu sample.jpg --durable
 ```
 
 To resume durable etu session, use previous cmd again or simple use etu --durable
+
 ```bash
 etu --durable
 ```
