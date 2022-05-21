@@ -188,6 +188,7 @@ const startEndpoint = async (port, config, args, previous) => {
       console.log(homedir + "/");
     } else {
       if (args["--cookbook"]) {
+        mkdirSync(ETU_PATH, { recursive: true });
         const answer = await inquirer.prompt([
           {
             type: "list",
