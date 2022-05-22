@@ -31,9 +31,6 @@ import generateIIIF from "./iiif.js";
 import { create } from "ipfs-core";
 import { HttpGateway } from "ipfs-http-gateway";
 import openInEditor from "open-in-editor";
-const editor = openInEditor.configure({
-  editor: "code",
-});
 import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -63,13 +60,15 @@ const getHelp = () => chalk`
 
   OPTIONS
 
-      --help                              Shows this help message
+      -h, --help                          Shows this help message
 
       -v, --version                       Displays the current version of serve
 
       --cookbook                          Run IIIF Cookbook recipe in etu
 
       -V, --viewer                        Choose the viewer: m3(mirador3), uv(universal viewer)
+
+      -m, --manifest                      Open manifest in your favorite editor, such as 'sublime', 'atom', 'code', 'webstorm', 'phpstorm', 'idea14ce', 'vim', 'emacs', 'visualstudio'
 
       -i, --import                        Import etu bundle from a local file (extension not included)
       
@@ -428,7 +427,13 @@ const startEndpoint = async (port, config, args, previous) => {
       } catch (err) {
         console.log(error(err.message));
       }
-      await editor.open(ETU_PATH + "manifest.json");
+
+      if (args["--manifest"]) {
+        const editor = openInEditor.configure({
+          editor: args["--manifest"],
+        });
+        await editor.open(ETU_PATH + "manifest.json");
+      }
       open(url);
     });
   }
@@ -439,6 +444,7 @@ let args = null;
 try {
   args = arg({
     "--help": Boolean,
+    "--manifest": String,
     "--version": Boolean,
     "--durable": Boolean,
     "--clear": Boolean,
@@ -453,6 +459,7 @@ try {
     "--ssl-key": String,
     "--ipfs": Boolean,
     "-h": "--help",
+    "-m": "--manifest",
     "-v": "--version",
     "-d": "--durable",
     "-c": "--clear",
