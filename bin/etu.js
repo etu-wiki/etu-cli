@@ -214,12 +214,13 @@ const startEndpoint = async (port, config, args, previous) => {
               "0065-opera-multiple-canvases",
               "0068-newspaper",
               "0117-add-image-thumbnail",
-              "0139-geolocate-canvas-fragment",
+              // "0139-geolocate-canvas-fragment",  # not implemented yet
               "0219-using-caption-file",
               "0202-start-canvas",
               "0230-navdate",
               "0234-provider",
               // "0258-tagging-external-resource",  # not implemented yet
+              "0269-embedded-or-referenced-annotations"
             ],
           },
         ]);
