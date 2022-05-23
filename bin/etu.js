@@ -219,6 +219,7 @@ const startEndpoint = async (port, config, args, previous) => {
               "0202-start-canvas",
               "0230-navdate",
               "0234-provider",
+              // "0258-tagging-external-resource",  # not implemented yet
             ],
           },
         ]);
