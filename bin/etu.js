@@ -208,6 +208,7 @@ const startEndpoint = async (port, config, args, previous) => {
               "0024-book-4-toc",
               "0026-toc-opera",
               "0030-multi-volume",
+              "0033-choice",
               "0046-rendering",
               "0053-seeAlso",
               "0064-opera-one-canvas",
