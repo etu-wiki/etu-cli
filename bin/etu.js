@@ -224,29 +224,16 @@ const startEndpoint = async (port, config, args, previous) => {
               "0230-navdate",
               "0234-provider",
               // "0258-tagging-external-resource",  # not implemented yet
-              "0269-embedded-or-referenced-annotations"
+              "0269-embedded-or-referenced-annotations",
             ],
           },
         ]);
 
         const cookbookPath = __dirname + `/../cookbook/${answer.cookbook}/`;
-        function traverseFolder(dirPath, list = []) {
-          readdirSync(dirPath).forEach(function (item) {
-            let fullpath = path.join(dirPath, item);
-            let stats = statSync(fullpath);
-            if (stats.isDirectory()) {
-              traverseFolder(fullpath, list);
-            } else {
-              list.push(fullpath);
-            }
-          });
-          return list;
-        }
-        const jsonList = traverseFolder(cookbookPath);
-        console.log(jsonList);
-        for (let i = 0; i < jsonList.length; i++) {
-          copyFileSync(jsonList[i], ETU_PATH + "manifest.json");
-        }
+        copyFileSync(
+          cookbookPath + "manifest.json",
+          ETU_PATH + "manifest.json"
+        );
       } else {
         const cwd = process.cwd();
         // const entry = args._.length > 0 ? resolve(args._[0]) : cwd;
