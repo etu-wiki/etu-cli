@@ -510,8 +510,12 @@ registerShutdown(() => {
     rmSync(ETU_PATH, { recursive: true, force: true });
   }
 
-  process.on("SIGINT", () => {
-    console.log(`\n${warning("Force-closing all open sockets...")}`);
+  if (args["--manifest"]) {
     process.exit(0);
-  });
+  } else {
+    process.on("SIGINT", () => {
+      console.log(`\n${warning("Force-closing all open sockets...")}`);
+      process.exit(0);
+    });
+  }
 });
