@@ -32,6 +32,8 @@ import { create } from "ipfs-core";
 import { HttpGateway } from "ipfs-http-gateway";
 import openInEditor from "open-in-editor";
 import { fileURLToPath } from "url";
+import livereload from "livereload";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -421,13 +423,16 @@ const startEndpoint = async (port, config, args, previous) => {
         console.log(error(err.message));
       }
 
+      open(url);
+
       if (args["--manifest"]) {
         const editor = openInEditor.configure({
           editor: args["--manifest"],
         });
         await editor.open(ETU_PATH + "manifest.json");
+        const lrserver = livereload.createServer({ exts: ["json"] });
+        lrserver.watch(ETU_PATH);
       }
-      open(url);
     });
   }
 };
