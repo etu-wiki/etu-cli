@@ -1,6 +1,7 @@
 # etu-cli
-A command line to present your IIIF image on the fly!
-
+A command line to present your own IIIF images!
+Offline first
+Democratizing IIIF for everyone
 ## Usage
 You can also use [npm](https://www.npmjs.com/) instead, if you'd like:
 
