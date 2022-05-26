@@ -511,6 +511,7 @@ registerShutdown(() => {
   }
 
   if (args["--manifest"]) {
+    // while livereload is on, exit directly without waiting
     process.exit(0);
   } else {
     process.on("SIGINT", () => {
