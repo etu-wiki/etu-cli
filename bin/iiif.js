@@ -12,7 +12,7 @@ const info = (message) => `${chalk.magenta("INFO:")} ${message}`;
 const error = (message) => `${chalk.red("ERROR:")} ${message}`;
 
 import Jimp from "jimp";
-import IiifImageShims from "iiif-image-shims";
+import IiifImageShims from "@etu-wiki/iiif-image-shims";
 
 import {fileURLToPath} from 'url';
 const __filename = fileURLToPath(import.meta.url);

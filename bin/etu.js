@@ -1,12 +1,21 @@
 #!/usr/bin/env node
 
 // Native
-import fs from "fs";
 import path from "path";
+import tar from "tar";
 import { createServer as createHttpServer } from "http";
 import { createServer as createSecureHttpSever } from "https";
 import { resolve } from "path";
-import { rmSync, existsSync, unlinkSync, readFileSync } from "fs";
+import {
+  rmSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+  existsSync,
+  mkdirSync,
+  copyFileSync,
+  cpSync,
+} from "fs";
 import { promisify } from "util";
 import { networkInterfaces, homedir } from "os";
 
@@ -21,12 +30,14 @@ import open from "open";
 import generateIIIF from "./iiif.js";
 import { create } from "ipfs-core";
 import { HttpGateway } from "ipfs-http-gateway";
-
+import openInEditor from "open-in-editor";
 import { fileURLToPath } from "url";
+import livereload from "livereload";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const pkg = JSON.parse(fs.readFileSync(__dirname + '/../package.json'));
+const pkg = JSON.parse(readFileSync(__dirname + "/../package.json"));
 // Utilities
 const compressionHandler = promisify(compression());
 const interfaces = networkInterfaces();
@@ -38,7 +49,7 @@ const error = (message) => `${chalk.red("ERROR:")} ${message}`;
 const ETU_PATH = homedir + "/etu/";
 
 const getHelp = () => chalk`
-  eut - present your IIIF image on the fly
+  eut - IIIF for your own
 
   USAGE
 
@@ -51,14 +62,24 @@ const getHelp = () => chalk`
 
   OPTIONS
 
-      --help                              Shows this help message
+      -h, --help                          Shows this help message
 
       -v, --version                       Displays the current version of serve
 
       --cookbook                          Run IIIF Cookbook recipe in etu
 
       -V, --viewer                        Choose the viewer: m3(mirador3), uv(universal viewer)
+
+      -m, --manifest                      Open manifest in your favorite editor, such as 'sublime', 'atom', 'code', 'webstorm', 'phpstorm', 'idea14ce', 'vim', 'emacs', 'visualstudio'
+
+      -i, --import                        Import etu bundle from a local file (extension not included)
       
+      -e, --export                        Export etu bundle to a local file (extension not included)
+
+      -d, --durable                       Don't delete the temporary directory after the process ends
+      
+      -c, --clear                         Clear the temporary directory existed from last session
+
       -p, --port                          Specify a port on which to listen
 
       -C, --cors                          Enable CORS, sets \`Access-Control-Allow-Origin\` to \`*\`
@@ -99,7 +120,7 @@ const getNetworkAddress = () => {
 };
 
 const getAllFiles = (dirPath, originalPath, arrayOfFiles) => {
-  const files = fs.readdirSync(dirPath);
+  const files = readdirSync(dirPath);
 
   arrayOfFiles = arrayOfFiles || [];
   originalPath = originalPath || path.resolve(dirPath, "..");
@@ -108,13 +129,13 @@ const getAllFiles = (dirPath, originalPath, arrayOfFiles) => {
 
   const root = {
     path: folder.replace(/\\/g, "/"),
-    mtime: fs.statSync(dirPath).mtime,
+    mtime: statSync(dirPath).mtime,
   };
 
   arrayOfFiles.push(root);
 
   files.forEach(function (file) {
-    if (fs.statSync(dirPath + "/" + file).isDirectory()) {
+    if (statSync(dirPath + "/" + file).isDirectory()) {
       arrayOfFiles = getAllFiles(
         dirPath + "/" + file,
         originalPath,
@@ -125,8 +146,8 @@ const getAllFiles = (dirPath, originalPath, arrayOfFiles) => {
 
       arrayOfFiles.push({
         path: path.relative(originalPath, file).replace(/\\/g, "/"),
-        content: fs.readFileSync(file),
-        mtime: fs.statSync(file).mtime,
+        content: readFileSync(file),
+        mtime: statSync(file).mtime,
       });
     }
   });
@@ -137,8 +158,8 @@ const getAllFiles = (dirPath, originalPath, arrayOfFiles) => {
 const startEndpoint = async (port, config, args, previous) => {
   const start = Date.now();
 
-  const cwd = process.cwd();
-  const entry = args._.length > 0 ? resolve(args._[0]) : cwd;
+  const httpMode = args["--ssl-cert"] && args["--ssl-key"] ? "https" : "http";
+  const baseUrl = `${httpMode}://localhost:${port}`;
 
   let viewer = args["--viewer"] || "m3";
   let viewerName = "Mirador 3";
@@ -157,128 +178,127 @@ const startEndpoint = async (port, config, args, previous) => {
       throw Error("invalid viewer type");
   }
 
-  // Nevigate to index if file not found
-  config.rewrites = [
-    {
-      source: "**",
-      destination: "/viewer/index.html",
-    },
-  ];
-
-  if (iiifVersion === "2") {
-    config.redirects = [
-      {
-        source: "/i/2/:id/full/:width/0/default.jpg",
-        destination: "/i/2/:id.jpg",
-      },
-    ];
-  }
-
-  const { isTTY } = process.stdout;
-  const httpMode = args["--ssl-cert"] && args["--ssl-key"] ? "https" : "http";
-
-  const baseUrl = `${httpMode}://localhost:${port}`;
-  const url = baseUrl + "/index.html";
-
-  fs.mkdirSync(ETU_PATH, { recursive: true });
-
-  if (args["--cookbook"]) {
-    const answer = await inquirer.prompt([
-      {
-        type: "list",
-        name: "cookbook",
-        message: "Which recipe would you like to choose?",
-        choices: [
-          "0001-mvm-image",
-          "0002-mvm-audio",
-          "0003-mvm-video",
-          "0004-canvas-size",
-          "0005-image-service",
-          "0006-text-language",
-          "0009-book-1",
-          "0010-book-2-viewing-direction",
-          "0013-placeholderCanvas",
-          "0014-accompanyingcanvas",
-          "0015-start",
-          "0024-book-4-toc",
-          "0046-rendering",
-          "0117-add-image-thumbnail",
-          "0139-geolocate-canvas-fragment",
-          "0219-using-caption-file",
-          "0202-start-canvas",
-          "0230-navdate",
-          "0234-provider",
-        ],
-      },
-    ]);
-
-    const cookbookPath =
-      __dirname +
-      `/../cookbook/${answer.cookbook}/`;
-    function traverseFolder(dirPath,list=[]){
-      fs.readdirSync(dirPath).forEach(function(item){
-        let fullpath = path.join(dirPath,item);
-        let stats = fs.statSync(fullpath);
-        if(stats.isDirectory()){
-          traverseFolder(fullpath,list);
-        }else{
-          list.push(fullpath);
-        }
-      });
-      return list;
-    }
-    const jsonList = traverseFolder(cookbookPath);
-    console.log(jsonList);
-    for (let i = 0; i < jsonList.length; i++){
-      fs.copyFileSync(jsonList[i], ETU_PATH + "manifest.json");
-    }    
+  if (existsSync(ETU_PATH)) {
+    console.log(info("loading existing etu bundle"));
+    console.log(info("use --clear to delete the existing etu bundle"));
   } else {
-    // generate IIIF content
-    await generateIIIF(entry, iiifVersion, baseUrl);
+    // preparing raw material
+    if (args["--import"]) {
+      const importFileName = args["--import"] + ".etu";
+      await tar.x({ file: importFileName, C: homedir + "/" });
+      console.log(homedir + "/");
+    } else {
+      if (args["--cookbook"]) {
+        mkdirSync(ETU_PATH, { recursive: true });
+        const answer = await inquirer.prompt([
+          {
+            type: "list",
+            name: "cookbook",
+            message: "Which recipe would you like to choose?",
+            choices: [
+              "0001-mvm-image",
+              "0002-mvm-audio",
+              "0003-mvm-video",
+              "0004-canvas-size",
+              "0005-image-service",
+              "0006-text-language",
+              "0009-book-1",
+              "0010-book-2-viewing-direction",
+              "0013-placeholderCanvas",
+              "0014-accompanyingcanvas",
+              "0015-start",
+              "0024-book-4-toc",
+              "0026-toc-opera",
+              "0030-multi-volume",
+              "0033-choice",
+              "0035-foldouts",
+              "0036-composition-from-multiple-images",
+              "0046-rendering",
+              "0053-seeAlso",
+              "0064-opera-one-canvas",
+              "0065-opera-multiple-canvases",
+              "0068-newspaper",
+              "0074-multiple-language-captions",
+              "0117-add-image-thumbnail",
+              // "0139-geolocate-canvas-fragment",  # not implemented yet
+              "0219-using-caption-file",
+              "0202-start-canvas",
+              "0230-navdate",
+              "0234-provider",
+              // "0258-tagging-external-resource",  # not implemented yet
+              "0269-embedded-or-referenced-annotations",
+            ],
+          },
+        ]);
+
+        const cookbookPath = __dirname + `/../cookbook/${answer.cookbook}/`;
+        copyFileSync(
+          cookbookPath + "manifest.json",
+          ETU_PATH + "manifest.json"
+        );
+      } else {
+        const cwd = process.cwd();
+        // const entry = args._.length > 0 ? resolve(args._[0]) : cwd;
+        if (args._[0]) {
+          // generate IIIF content
+          await generateIIIF(resolve(args._[0]), iiifVersion, baseUrl);
+        }
+      }
+
+      cpSync(__dirname + "/../viewer/" + viewer, ETU_PATH, { recursive: true });
+    }
   }
 
-  config.public = ETU_PATH;
-
-  fs.cpSync(__dirname + "/../viewer/" + viewer, ETU_PATH, { recursive: true });
+  if (args["--export"]) {
+    let exportFileName = args["--export"] || "etu";
+    await tar.c(
+      { gzip: true, C: homedir + "/", file: exportFileName + ".etu" },
+      ["etu"]
+    );
+  }
 
   if (args["--ipfs"]) {
     if (viewer === "m3") {
       const ipfs = await create();
-      const id = await ipfs.id()
-      console.log(id.id)
-      const gateway = new HttpGateway(ipfs)
-      await gateway.start()
+      const id = await ipfs.id();
+      console.log(id.id);
+      const gateway = new HttpGateway(ipfs);
+      await gateway.start();
 
-      const config = await ipfs.config.getAll()
-      const addresses = config.Addresses || { Swarm: [], Gateway: [] }
-      const gatewayAddrs = addresses?.Gateway || []
-      console.log(gatewayAddrs)
-  
-      registerShutdown(async () => {await ipfs.stop(); await gateway.stop()});
-  
+      const config = await ipfs.config.getAll();
+      const addresses = config.Addresses || { Swarm: [], Gateway: [] };
+      const gatewayAddrs = addresses?.Gateway || [];
+      console.log(gatewayAddrs);
+
+      registerShutdown(async () => {
+        await ipfs.stop();
+        await gateway.stop();
+      });
+
       const spinner = ora(`Adding to IPFS`).start();
-      let etuCID
+      let etuCID;
       for await (const result of ipfs.addAll(getAllFiles(ETU_PATH), {
         cidVersion: 1,
       })) {
         if (result.path === "etu") {
-          etuCID = result.cid
+          etuCID = result.cid;
           break;
         }
       }
-      spinner.stop()
-  
-      const localUrl = `http://localhost:9090/ipfs/${ etuCID }`
-      const ipfsUrl = `https://ipfs.io/ipfs/${ etuCID }`
-      console.log(localUrl)
-      console.log(ipfsUrl)
+      spinner.stop();
+
+      const localUrl = `http://localhost:9090/ipfs/${etuCID}`;
+      const ipfsUrl = `https://ipfs.io/ipfs/${etuCID}`;
+      console.log(localUrl);
+      console.log(ipfsUrl);
       const stop = Date.now();
-      let message = chalk.green("\nPresent your IIIF image on the fly!\n");
+      let message = chalk.green("\nIIIF for your own!\n");
       message += `\n${chalk.bold("- Time Cost:   ")}  ${
         (stop - start) / 1000
       } seconds`;
       message += `\n${chalk.bold("- IIIF Viewer: ")}  ${viewerName}`;
       message += `\n${chalk.bold("- IIIF Version:")}  ${iiifVersion}`;
+      message += `\n${chalk.bold("- CID:         ")}  ${etuCID}`;
       message += `\n${chalk.bold("- Local Url:   ")}  ${localUrl}`;
       message += `\n${chalk.bold("- IPFS Url:    ")}  ${ipfsUrl}`;
       // console.log(
@@ -288,13 +308,36 @@ const startEndpoint = async (port, config, args, previous) => {
       //     margin: 1,
       //   })
       // );
-      console.log(message)
+      console.log(message);
       open(localUrl);
     } else {
       console.log(warning(`Currenntly IPFS support Mirador3 only.`));
     }
-
   } else {
+    // Nevigate to index if file not found
+    config.rewrites = [
+      {
+        source: "**",
+        destination: "/viewer/index.html",
+      },
+    ];
+
+    if (iiifVersion === "2") {
+      config.redirects = [
+        {
+          source: "/i/2/:id/full/:width/0/default.jpg",
+          destination: "/i/2/:id.jpg",
+        },
+      ];
+    }
+
+    const { isTTY } = process.stdout;
+    const url = baseUrl + "/index.html";
+
+    mkdirSync(ETU_PATH, { recursive: true });
+
+    config.public = ETU_PATH;
+
     const severHandler = async (request, response) => {
       if (args["--cors"]) {
         response.setHeader("Access-Control-Allow-Origin", "*");
@@ -350,7 +393,7 @@ const startEndpoint = async (port, config, args, previous) => {
       try {
         const stop = Date.now();
         if (isTTY && process.env.NODE_ENV !== "production") {
-          let message = chalk.green("\nPresent your IIIF image on the fly!\n");
+          let message = chalk.green("\nIIIF for your own!\n");
           message += `\n${chalk.bold("- Time Cost:   ")}  ${
             (stop - start) / 1000
           } seconds`;
@@ -371,7 +414,7 @@ const startEndpoint = async (port, config, args, previous) => {
           //     margin: 1,
           //   })
           // );
-          console.log(message)
+          console.log(message);
         } else {
           const suffix = localAddress ? ` at ${localAddress}` : "";
           console.log(info(`Accepting connections${suffix}`));
@@ -381,19 +424,31 @@ const startEndpoint = async (port, config, args, previous) => {
       }
 
       open(url);
+
+      if (args["--manifest"]) {
+        const editor = openInEditor.configure({
+          editor: args["--manifest"],
+        });
+        await editor.open(ETU_PATH + "manifest.json");
+        const lrserver = livereload.createServer({ exts: ["json"] });
+        lrserver.watch(ETU_PATH);
+      }
     });
   }
 };
-
-rmSync(ETU_PATH, { recursive: true, force: true });
 
 let args = null;
 
 try {
   args = arg({
     "--help": Boolean,
-    '--version': Boolean,
+    "--manifest": String,
+    "--version": Boolean,
+    "--durable": Boolean,
+    "--clear": Boolean,
     "--viewer": String,
+    "--import": String,
+    "--export": String,
     "--cookbook": Boolean,
     "--port": String,
     "--cors": Boolean,
@@ -402,8 +457,13 @@ try {
     "--ssl-key": String,
     "--ipfs": Boolean,
     "-h": "--help",
+    "-m": "--manifest",
     "-v": "--version",
+    "-d": "--durable",
+    "-c": "--clear",
     "-V": "--viewer",
+    "-i": "--import",
+    "-e": "--export",
     "-C": "--cors",
     "-p": "--port",
   });
@@ -417,7 +477,7 @@ if (args["--help"]) {
   process.exit(0);
 }
 
-if (args['--version']) {
+if (args["--version"]) {
   console.log(pkg.version);
   process.exit(0);
 }
@@ -427,9 +487,14 @@ if (!args["--port"]) {
   args["--port"] = process.env.PORT || 3000;
 }
 
-if (args._.length > 1) {
-  console.error(error("Please provide one path argument at maximum"));
-  process.exit(1);
+// if (args._.length > 1) {
+//   console.error(error("Please provide one path argument at maximum"));
+//   process.exit(1);
+// }
+
+if (args["--clear"]) {
+  rmSync(ETU_PATH, { recursive: true, force: true });
+  process.exit(0);
 }
 
 const config = {};
@@ -441,9 +506,17 @@ await startEndpoint(args["--port"], config, args);
 
 registerShutdown(() => {
   console.log(`\n${info("Gracefully shutting down. Please wait...")}`);
-  rmSync(ETU_PATH, { recursive: true, force: true });
-  process.on("SIGINT", () => {
-    console.log(`\n${warning("Force-closing all open sockets...")}`);
+  if (!args["--durable"]) {
+    rmSync(ETU_PATH, { recursive: true, force: true });
+  }
+
+  if (args["--manifest"]) {
+    // while livereload is on, exit directly without waiting
     process.exit(0);
-  });
+  } else {
+    process.on("SIGINT", () => {
+      console.log(`\n${warning("Force-closing all open sockets...")}`);
+      process.exit(0);
+    });
+  }
 });
