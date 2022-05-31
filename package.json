@@ -42,5 +42,6 @@
   },
   "publishConfig": {
     "@etu:registry": "https://registry.npmjs.org/"
-  }
+  },
+  "repository": "https://github.com/etu-wiki/etu-cli"
 }
