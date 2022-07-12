@@ -33,6 +33,7 @@ import { HttpGateway } from "ipfs-http-gateway";
 import openInEditor from "open-in-editor";
 import { fileURLToPath } from "url";
 import livereload from "livereload";
+import { Web3Storage, getFilesFromPath } from 'web3.storage'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -88,9 +89,11 @@ const getHelp = () => chalk`
 	  
       --ssl-key                           Optional path to the SSL/TLS certificate\'s private key
 
-      --no-port-switching                 Do not open a port other than the one specified when it\'s taken.
+      --no-port-switching                 Do not open a port other than the one specified when it\'s taken
 
-      --ipfs                              Export IIIF content to IPFS
+      --ipfs                              Start a local IPFS gateway and export IIIF content to IPFS
+
+      --web3                              Pulish etu image to web3.storage. Please add the token as a parameter
 `;
 
 const registerShutdown = (fn) => {
@@ -267,18 +270,30 @@ const startEndpoint = async (port, config, args, previous) => {
     );
   }
 
+  if (args["--web3"]) {
+    const storage = new Web3Storage({ token: args["--web3"] })
+    const files = await getFilesFromPath(ETU_PATH)
+    console.log(`Uploading ${files.length} files`)
+    const cid = await storage.put(files, {name: 'etu', wrapWithDirectory: false})
+    console.log('Content added with CID:', cid)
+    const ipfsUrl = `https://dweb.link/ipfs/${cid}`;
+    console.log(ipfsUrl);
+    open(ipfsUrl);
+    return
+  }
+
   if (args["--ipfs"]) {
     if (viewer === "m3") {
       const ipfs = await create();
       const id = await ipfs.id();
-      console.log(id.id);
+      // console.log(id.id);
       const gateway = new HttpGateway(ipfs);
       await gateway.start();
 
       const config = await ipfs.config.getAll();
       const addresses = config.Addresses || { Swarm: [], Gateway: [] };
-      const gatewayAddrs = addresses?.Gateway || [];
-      console.log(gatewayAddrs);
+      // const gatewayAddrs = addresses?.Gateway || [];
+      // console.log(gatewayAddrs);
 
       registerShutdown(async () => {
         await ipfs.stop();
@@ -298,9 +313,10 @@ const startEndpoint = async (port, config, args, previous) => {
       spinner.stop();
 
       const localUrl = `http://localhost:9090/ipfs/${etuCID}`;
-      const ipfsUrl = `https://ipfs.io/ipfs/${etuCID}`;
       console.log(localUrl);
+      const ipfsUrl = `https://dweb.link/ipfs/${etuCID}`;
       console.log(ipfsUrl);
+
       const stop = Date.now();
       let message = chalk.green("\nIIIF for your own!\n");
       message += `\n${chalk.bold("- Time Cost:   ")}  ${
@@ -466,6 +482,7 @@ try {
     "--ssl-cert": String,
     "--ssl-key": String,
     "--ipfs": Boolean,
+    "--web3": String,
     "-h": "--help",
     "-m": "--manifest",
     "-v": "--version",
