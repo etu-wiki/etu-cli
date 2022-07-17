@@ -33,7 +33,10 @@ import { HttpGateway } from "ipfs-http-gateway";
 import openInEditor from "open-in-editor";
 import { fileURLToPath } from "url";
 import livereload from "livereload";
-import { Web3Storage, getFilesFromPath } from 'web3.storage'
+
+import { Web3Storage, getFilesFromPath } from "web3.storage";
+import { NFTStorage } from "nft.storage";
+import { filesFromPath } from "files-from-path";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -93,7 +96,7 @@ const getHelp = () => chalk`
 
       --ipfs                              Start a local IPFS gateway and export IIIF content to IPFS
 
-      --web3                              Pulish etu image to web3.storage. Please add the token as a parameter
+      --web3                              Publish etu image to web3.storage. Please add the token as a parameter
 `;
 
 const registerShutdown = (fn) => {
@@ -271,15 +274,34 @@ const startEndpoint = async (port, config, args, previous) => {
   }
 
   if (args["--web3"]) {
-    const storage = new Web3Storage({ token: args["--web3"] })
-    const files = await getFilesFromPath(ETU_PATH)
-    console.log(`Uploading ${files.length} files`)
-    const cid = await storage.put(files, {name: 'etu', wrapWithDirectory: false})
-    console.log('Content added with CID:', cid)
+    const storage = new Web3Storage({ token: args["--web3"] });
+    const files = await getFilesFromPath(ETU_PATH);
+    console.log(`Uploading ${files.length} files`);
+    const cid = await storage.put(files, {
+      name: "etu",
+      wrapWithDirectory: false,
+    });
+    console.log("Content added with CID:", cid);
     const ipfsUrl = `https://dweb.link/ipfs/${cid}`;
     console.log(ipfsUrl);
     open(ipfsUrl);
-    return
+    return;
+  }
+
+  if (args["--nft"]) {
+    const client = new NFTStorage({ token: args["--nft"] });
+    console.log(path.resolve(ETU_PATH));
+    const files = filesFromPath(ETU_PATH, {
+      pathPrefix: path.resolve(ETU_PATH), // see the note about pathPrefix below
+      hidden: true, // use the default of false if you want to ignore files that start with '.'
+    });
+    console.log(`Uploading ${files} files`);
+    const cid = await client.storeDirectory(files);
+    console.log("Content added with CID:", cid);
+    const ipfsUrl = `https://${cid}.ipfs.nftstorage.link`;
+    console.log(ipfsUrl);
+    open(ipfsUrl);
+    return;
   }
 
   if (args["--ipfs"]) {
@@ -483,6 +505,7 @@ try {
     "--ssl-key": String,
     "--ipfs": Boolean,
     "--web3": String,
+    "--nft": String,
     "-h": "--help",
     "-m": "--manifest",
     "-v": "--version",

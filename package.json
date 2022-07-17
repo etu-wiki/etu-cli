@@ -33,6 +33,7 @@
     "jimp": "^0.16.1",
     "livereload": "^0.9.3",
     "mustache": "^4.2.0",
+    "nft.storage": "^6.4.0",
     "open": "^8.4.0",
     "open-in-editor": "^2.2.0",
     "ora": "^6.1.0",

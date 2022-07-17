@@ -36,10 +36,16 @@ etu sample.jpg --export sample
 etu --import sample
 ```
 
-IPFS is supported as well.
+Publish ETU image to IPFS while launching a local IPFS gateway
 
 ```bash
 etu sample.jpg --ipfs
+```
+
+Publish ETU image to web3.storage with a personal token
+
+```bash
+etu sample.jpg --web3 token
 ```
 
 By default etu files will be cleared each time local server is closed. To avoid that, use --durable option
