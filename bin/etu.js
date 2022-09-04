@@ -97,6 +97,8 @@ const getHelp = () => chalk`
       --ipfs                              Start a local IPFS gateway and export IIIF content to IPFS
 
       --web3                              Publish etu image to web3.storage. Please add the token as a parameter
+
+      --nft                               Publish etu image to nft.storage. Please add the token as a parameter
 `;
 
 const registerShutdown = (fn) => {
@@ -312,8 +314,8 @@ const startEndpoint = async (port, config, args, previous) => {
       const gateway = new HttpGateway(ipfs);
       await gateway.start();
 
-      const config = await ipfs.config.getAll();
-      const addresses = config.Addresses || { Swarm: [], Gateway: [] };
+      // const config = await ipfs.config.getAll();
+      // const addresses = config.Addresses || { Swarm: [], Gateway: [] };
       // const gatewayAddrs = addresses?.Gateway || [];
       // console.log(gatewayAddrs);
 
@@ -349,20 +351,14 @@ const startEndpoint = async (port, config, args, previous) => {
       message += `\n${chalk.bold("- CID:         ")}  ${etuCID}`;
       message += `\n${chalk.bold("- Local Url:   ")}  ${localUrl}`;
       message += `\n${chalk.bold("- IPFS Url:    ")}  ${ipfsUrl}`;
-      // console.log(
-      //   boxen(message, {
-      //     padding: 1,
-      //     borderColor: "green",
-      //     margin: 1,
-      //   })
-      // );
+
       console.log(message);
       open(localUrl);
     } else {
       console.log(warning(`Currenntly IPFS support Mirador3 only.`));
     }
   } else {
-    // Nevigate to index if file not found
+    // navigate to index if file not found
     config.rewrites = [
       {
         source: "**",
@@ -370,6 +366,7 @@ const startEndpoint = async (port, config, args, previous) => {
       },
     ];
 
+    // to disploy IIIF 2 thumbnail properly
     if (iiifVersion === "2") {
       config.redirects = [
         {
@@ -437,6 +434,7 @@ const startEndpoint = async (port, config, args, previous) => {
         localAddress = `${httpMode}://${address}:${details.port}`;
         networkAddress = ip ? `${httpMode}://${ip}:${details.port}` : null;
       }
+
       console.log(info(`Accepting connections on ${localAddress}`));
       try {
         const stop = Date.now();
@@ -455,13 +453,6 @@ const startEndpoint = async (port, config, args, previous) => {
               )} is in use.`
             );
           }
-          // console.log(
-          //   boxen(message, {
-          //     padding: 1,
-          //     borderColor: "green",
-          //     margin: 1,
-          //   })
-          // );
           console.log(message);
         } else {
           const suffix = localAddress ? ` at ${localAddress}` : "";
