@@ -42,10 +42,16 @@ Publish ETU image to IPFS while launching a local IPFS gateway
 etu sample.jpg --ipfs
 ```
 
-Publish ETU image to web3.storage with a personal token
+Publish ETU image to web3.storage with a API token
 
 ```bash
 etu sample.jpg --web3 token
+```
+
+Publish ETU image to nft.storage with a API token
+
+```bash
+etu sample.jpg --nft token
 ```
 
 By default etu files will be cleared each time local server is closed. To avoid that, use --durable option

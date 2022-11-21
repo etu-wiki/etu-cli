@@ -1,6 +1,6 @@
 {
     "@context": "http://iiif.io/api/presentation/3/context.json",
-    "id": "{{{ baseUrl }}}/p/3/{{ presentUuid }}",
+    "id": "{{{ baseUrl }}}/manifest.json",
     "type": "Manifest",
     "label": {
         "zh-Hant": [
@@ -29,14 +29,14 @@
                             "type": "Annotation",
                             "motivation": "painting",
                             "body": {
-                                "id": "i/3/{{ etag }}{{^tile}}.jpg{{/tile}}",
+                                "id": "{{{ baseUrl }}}/i/3/{{ etag }}{{^tile}}.jpg{{/tile}}",
                                 "type": "Image",
                                 "format": "image/jpeg"
                                 {{^level0}}
                                 ,
                                 "service": [
                                     {
-                                        "id": "/i/3/{{ etag }}",
+                                        "id": "{{{ baseUrl }}}/i/3/{{ etag }}",
                                         "type": "ImageService3",
                                         "profile": "level2"
                                     }
