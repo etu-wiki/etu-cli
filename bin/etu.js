@@ -72,7 +72,7 @@ const getHelp = () => chalk`
 
       --cookbook                          Run IIIF Cookbook recipe in etu
 
-      -V, --viewer                        Choose the viewer: m3(mirador3), u3(universal viewer 3), u4(universal viewer 4)
+      -V, --viewer                        Choose the viewer:  m2(mirador 2), m3(mirador3), u3(universal viewer 3), u4(universal viewer 4)
 
       -m, --manifest                      Open manifest in your favorite editor, such as 'sublime', 'atom', 'code', 'webstorm', 'phpstorm', 'idea14ce', 'vim', 'emacs', 'visualstudio'
 
@@ -173,6 +173,10 @@ const startEndpoint = async (port, config, args, previous) => {
   let iiifVersion = 3;
 
   switch (viewer) {
+    case "m2":
+      viewerName = "Mirador 2";
+      iiifVersion = "2";
+      break;
     case "m3":
       viewerName = "Mirador 3";
       iiifVersion = "3";
@@ -292,7 +296,7 @@ const startEndpoint = async (port, config, args, previous) => {
     ];
 
     // to disploy thumbnail for uv properly
-    if (viewer === "u3" || viewer === "u4") {
+    if (viewer === "u3" || viewer === "u4" || viewer === "m2") {
       config.redirects = [
         {
           source: `/i/${iiifVersion}/:id/full/:width/0/default.jpg`,
