@@ -14,7 +14,7 @@ const error = (message) => `${chalk.red("ERROR:")} ${message}`;
 import Jimp from "jimp";
 import IiifImageShims from "@etu-wiki/iiif-image-shims";
 
-import {fileURLToPath} from 'url';
+import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ETU_PATH = os.homedir + "/etu/";
@@ -28,11 +28,8 @@ function addLastMark(arr) {
   });
 }
 
-export default async function generateIIIF(
-  entry,
-  iiifVersion,
-  baseUrl
-) {
+export default async function generateIIIF(entry, iiifVersion, baseUrl) {
+  const imageFolder = ETU_PATH + "i/" + iiifVersion + "/";
   const presentUuid = uuid();
 
   const model = {
@@ -73,8 +70,7 @@ export default async function generateIIIF(
       item.canvasUuid = uuid();
       item.etag = uuid();
 
-      const imageFolder = ETU_PATH + "i/" + iiifVersion + "/";
-      fs.mkdirSync(imageFolder, {recursive: true});
+      fs.mkdirSync(imageFolder + item.etag, { recursive: true });
 
       // Code for Jimp
       item.level0 = true;
@@ -97,12 +93,25 @@ export default async function generateIIIF(
           { width: item.width, height: item.height }
         );
 
-        fs.mkdirSync(imageFolder + item.etag, {recursive: true});
         fs.writeFileSync(
           imageFolder + item.etag + "/info.json",
           JSON.stringify(imageInfo.info)
         );
       }
+
+      // generate thumbnail
+      const THUMB_DIM_LIMIT = 400;
+
+      item.thumbHeight = Math.round(
+        Math.min(THUMB_DIM_LIMIT, (item.height / item.width) * THUMB_DIM_LIMIT)
+      );
+      item.thumbWidth = Math.round(
+        Math.min(THUMB_DIM_LIMIT, (item.width / item.height) * THUMB_DIM_LIMIT)
+      );
+
+      const thumbnail = await image.resize(item.thumbWidth, item.thumbHeight);
+      const thumbnailPath = imageFolder + item.etag + "/thumbnail.jpg";
+      thumbnail.write(thumbnailPath);
 
       items.push(item);
     }
@@ -115,8 +124,12 @@ export default async function generateIIIF(
     model.label = items[0].label;
   }
 
+  model.thumbnailPath = imageFolder + items[0].etag + "/thumbnail.jpg";
+
   const template = fs
-    .readFileSync(__dirname + "/../template/present" + iiifVersion + ".mustache")
+    .readFileSync(
+      __dirname + "/../template/present" + iiifVersion + ".mustache"
+    )
     .toString();
   const present = Mustache.render(template, model);
 
