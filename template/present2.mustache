@@ -1,6 +1,6 @@
 {
     "@context": "http://iiif.io/api/presentation/2/context.json",
-    "@id": "{{{ baseUrl }}}/p/2/{{ presentUuid }}",
+    "@id": "{{{ baseUrl }}}/manifest.json",
     "@type": "sc:Manifest",
     "label": "{{ label }}",
     "sequences": [
@@ -15,13 +15,19 @@
                     "@id": "{{{ baseUrl }}}/c/2/{{ canvasUuid }}",
                     "@type": "sc:Canvas",
                     "label": "{{ label }}",
+                    "thumbnail" : {
+                        "@id" : "i/2/{{ etag }}/thumbnail.jpg",
+                        "@type": "dctypes:Image",
+                        "height": {{ thumbHeight }},
+                        "width": {{ thumbWidth }}
+                    },
                     "images": [
                         {
                             "@id": "{{{ baseUrl }}}/c/2/{{ canvasUuid }}/ap/p",
                             "@type": "oa:Annotation",
                             "motivation": "sc:painting",
                             "resource": {
-                                "@id": "i/2/{{ etag }}",
+                                "@id": "i/2/{{ etag }}{{^tile}}.jpg{{/tile}}",
                                 "@type": "dctypes:Image",
                                 "format": "image/jpeg",
                                 "service": {

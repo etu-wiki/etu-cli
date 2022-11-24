@@ -12,3 +12,8 @@
 ## [v0.1.6] - 2022-11-21
 
 * support universal viewer 4
+
+## [v0.1.7] - 2022-11-24
+
+* support mirador 2
+* fix thumbnail issue
