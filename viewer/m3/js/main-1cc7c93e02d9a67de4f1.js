@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkmirador_integration=self.webpackChunkmirador_integration||[]).push([[179],{29136:(r,a,i)=>{var e=i(70734),o=i(8892);i(67294),i(22318),i(17812),i.g.Mirador=e.Z,i.g.miradorImageToolsPlugin=o.m}},r=>{r.O(0,[463,733,289,239,693,145,720,778],(()=>(29136,r(r.s=29136)))),r.O()}]);
+//# sourceMappingURL=main-1cc7c93e02d9a67de4f1.js.map

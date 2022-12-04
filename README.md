@@ -1,83 +1,57 @@
-# etu-cli
-A command line to present your own IIIF images!
-Offline first
-Democratizing IIIF for everyone
+# ETU CLI
+## Introduction
+ETU CLI is an open source command line tool to present your local IIIF images. It converts your images to web compatible format and launch local http server to interact.
+Currently IIIF viewers supported by ETU including Mirador 2, Mirador 3, Universal Viewer 3, Universal Viewer 4. IIIF Image Server such as IIP or Cantaloupe is also on our to-do list.
+ETU ❤️ IIIF. We endeavor to democratizing IIIF technical stack to everyone who loves it.
+<br />
+<br />
 ## Usage
-You can also use [npm](https://www.npmjs.com/) instead, if you'd like:
+You can use [npm](https://www.npmjs.com/) or [Yarn](https://yarnpkg.com/en/) to install ETU, which requires [Node.js LTS](https://nodejs.org) at least: 
 
 ```bash
 npm install -g etu-cli
 ```
-
-If you prefer, you can also install the package globally using [Yarn](https://yarnpkg.com/en/) (you'll need at least [Node.js LTS](https://nodejs.org/en/)):
-
 ```bash
 yarn global add etu-cli
 ```
+<br />
+There three steps to go before launching a local IIIF enabled web server:
 
-Once that's done, you can specify which folder you want to serve:
-
+First, initialize etu project in any empty folder in your local machine by
 ```bash
-etu folder_name
+etu init
+```
+You will be asked a series of questions regarding to where is your images and other settings
+
+Second, covert source images to a web-oriented format which might be time consuming:
+```bash
+etu install
 ```
 
-...or specify a image file you want to serve:
-
+Third, launch local web server equipped with images in IIIF image API and presentation API
 ```bash
-etu sample.jpg
+etu run
 ```
+<br />
 
-You can also import/export etu files to one package file which is portable
-
+For advance user, use following command to lively update manifest file which changes image presentation
 ```bash
-etu sample.jpg --export sample
+etu run -m
 ```
+or update the IIIF viewer setting which impact the viewer's theme and appearence
 ```bash
-etu --import sample
+etu run -V
 ```
+<br />
+At any command level, use -h or --help to familar yourself with ETU and improve your skills.
 
-Publish ETU image to IPFS while launching a local IPFS gateway
+<br />
+Issue or pull request is always welcome!
+<br />
+<br />
+<br />
 
-```bash
-etu sample.jpg --ipfs
-```
-
-Publish ETU image to web3.storage with a API token
-
-```bash
-etu sample.jpg --web3 token
-```
-
-Publish ETU image to nft.storage with a API token
-
-```bash
-etu sample.jpg --nft token
-```
-
-By default etu files will be cleared each time local server is closed. To avoid that, use --durable option
-
-```bash
-etu sample.jpg --durable
-```
-
-To resume durable etu session, use previous cmd again or simple use etu --durable
-
-```bash
-etu --durable
-```
-
-To clear etu session, use previous cmd again or simple use etu --durable
-```bash
-etu --clear
-```
-
-Finally, run this command to see a list of all available options:
-
-```bash
-etu --help
-```
 ## Contributing
-
 Contributions are what make the open source community such an amazing place to be learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
 1. Fork the etu-cli Project (`https://github.com/etu-wiki/etu-cli`)
