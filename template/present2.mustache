@@ -1,42 +1,47 @@
 {
     "@context": "http://iiif.io/api/presentation/2/context.json",
-    "@id": "{{{ baseUrl }}}/manifest.json",
+    "@id": "{{{ presentBaseUrl }}}/p/2/{{ presentUuid }}/manifest.json",
     "@type": "sc:Manifest",
     "label": "{{ label }}",
     "sequences": [
 
         {
-            "@id": "{{{ baseUrl }}}/s/2/{{ canvasUuid }}",
+            "@id": "{{{ presentBaseUrl }}}/s/2/{{ canvasUuid }}",
             "@type": "sc:Sequence",
             "label": "{{ label }}",
             "canvases": [
                 {{#items}}
                 {
-                    "@id": "{{{ baseUrl }}}/c/2/{{ canvasUuid }}",
+                    "@id": "{{{ presentBaseUrl }}}/c/2/{{ canvasUuid }}",
                     "@type": "sc:Canvas",
                     "label": "{{ label }}",
                     "thumbnail" : {
-                        "@id" : "i/2/{{ etag }}/thumbnail.jpg",
+                        "@id" : "i/2/{{ etag }}/thumbnail.{{ format }}",
                         "@type": "dctypes:Image",
                         "height": {{ thumbHeight }},
                         "width": {{ thumbWidth }}
                     },
                     "images": [
                         {
-                            "@id": "{{{ baseUrl }}}/c/2/{{ canvasUuid }}/ap/p",
+                            "@id": "{{{ presentBaseUrl }}}/c/2/{{ canvasUuid }}/ap/p",
                             "@type": "oa:Annotation",
                             "motivation": "sc:painting",
                             "resource": {
-                                "@id": "i/2/{{ etag }}{{^tile}}.jpg{{/tile}}",
+                                "@id": "i/2/{{ etag }}{{^tile}}.{{ format }}{{/tile}}",
                                 "@type": "dctypes:Image",
                                 "format": "image/jpeg",
+                                "height": {{ height }},
+                                "width": {{ width }}
+                                {{^level0}}
+                                ,
                                 "service": {
                                     "@context": "http://iiif.io/api/image/2/context.json",
                                     "@id": "i/2/{{ etag }}",
                                     "profile": "http://iiif.io/api/image/2/level2.json"
                                 }
+                                {{/level0}}
                             },
-                            "on": "{{{ baseUrl }}}/c/2/{{ canvasUuid }}"
+                            "on": "{{{ presentBaseUrl }}}/c/2/{{ canvasUuid }}"
                         }
                     ],
                     "height": {{ height }},

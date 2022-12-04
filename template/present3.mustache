@@ -1,6 +1,6 @@
 {
     "@context": "http://iiif.io/api/presentation/3/context.json",
-    "id": "{{{ baseUrl }}}/manifest.json",
+    "id": "{{{ presentBaseUrl }}}/p/3/{{ presentUuid }}/manifest.json",
     "type": "Manifest",
     "label": {
         "zh-Hant": [
@@ -10,7 +10,7 @@
     "items": [
         {{#items}}
         {
-            "id": "{{{ baseUrl }}}/c/3/{{ canvasUuid }}",
+            "id": "{{{ presentBaseUrl }}}/c/3/{{ canvasUuid }}",
             "type": "Canvas",
             "label": {
                 "zh-Hant": [
@@ -21,7 +21,7 @@
             "width": {{ width }},
             "thumbnail": [
                 {
-                "id": "i/3/{{ etag }}/thumbnail.jpg",
+                "id": "i/3/{{ etag }}/thumbnail.{{ format }}",
                 "type": "Image",
                 "format": "image/jpeg",
                 "height": {{ thumbHeight }},
@@ -30,29 +30,31 @@
             ],
             "items": [
                 {
-                    "id": "{{{ baseUrl }}}/c/3/{{ canvasUuid }}/ap/p",
+                    "id": "{{{ presentBaseUrl }}}/c/3/{{ canvasUuid }}/ap/p",
                     "type": "AnnotationPage",
                     "items": [
                         {
-                            "id": "{{{ baseUrl }}}/c/3/{{ canvasUuid }}/ap/p/a/",
+                            "id": "{{{ presentBaseUrl }}}/c/3/{{ canvasUuid }}/ap/p/a/",
                             "type": "Annotation",
                             "motivation": "painting",
                             "body": {
-                                "id": "{{{ baseUrl }}}/i/3/{{ etag }}{{^tile}}.jpg{{/tile}}",
+                                "id": "i/3/{{ etag }}{{^tile}}.{{ format }}{{/tile}}",
                                 "type": "Image",
-                                "format": "image/jpeg"
+                                "format": "image/jpeg",
+                                "height": {{ height }},
+                                "width": {{ width }}
                                 {{^level0}}
                                 ,
                                 "service": [
                                     {
-                                        "id": "{{{ baseUrl }}}/i/3/{{ etag }}",
+                                        "id": "i/3/{{ etag }}",
                                         "type": "ImageService3",
                                         "profile": "level2"
                                     }
                                 ]
                                 {{/level0}}
                             },
-                            "target": "{{{ baseUrl }}}/c/3/{{ canvasUuid }}"
+                            "target": "{{{ presentBaseUrl }}}/c/3/{{ canvasUuid }}"
                         }
                     ]
                 }
