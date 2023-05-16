@@ -16,11 +16,11 @@ export const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, "package.json
 export const cwd = process.cwd()
 
 import chalk from "chalk";
-export const warning = (message: any) => `${chalk.yellow("WARNING:")} ${message}`;
-export const info = (message: any) => `${chalk.green("INFO:")} ${message}`;
-export const error = (message: any) => `${chalk.red("ERROR:")} ${message}`;
-export const bold = (message: any) => `${chalk.bold(message)}`;
-export const underline = (message: any) => `${chalk.underline(message)}`;
+export const warning = (message) => `${chalk.yellow("WARNING:")} ${message}`;
+export const info = (message) => `${chalk.green("INFO:")} ${message}`;
+export const error = (message) => `${chalk.red("ERROR:")} ${message}`;
+export const bold = (message) => `${chalk.bold(message)}`;
+export const underline = (message) => `${chalk.underline(message)}`;
 
 export function getVersion() {
   const data = [
@@ -31,15 +31,15 @@ export function getVersion() {
   return data.filter(o => o).join(', ');
 }
 
-export function emoji(text: string, fallback?: string) {
+export function emoji(text, fallback) {
   if (os.platform() === 'win32') {
     return fallback || '◆';
   }
   return `${text} `;
 }
 
-export function getIIIFVersion(viewer: string) {
-  const versionMapping: any = {
+export function getIIIFVersion(viewer) {
+  const versionMapping = {
     m2: '2',
     m3: '3',
     u3: '2',
@@ -49,8 +49,8 @@ export function getIIIFVersion(viewer: string) {
   return versionMapping[viewer];
 }
 
-export function getViewerName(viewer: string) {
-  const nameMapping: any = {
+export function getViewerName(viewer) {
+  const nameMapping = {
     m2: 'Mirador 2',
     m3: 'Mirador 3',
     u3: 'Universal Viewer 3',
@@ -60,19 +60,21 @@ export function getViewerName(viewer: string) {
   return nameMapping[viewer];
 }
 
-export function getMimeType(format: string) {
-  const mimeMapping: any = {
+export function getMimeType(format) {
+  const mimeMapping = {
     jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
     png: 'image/png',
     gif: 'image/gif',
-    avif: 'image/avif',
     webp: 'image/webp',
+    tif: 'image/tiff',
+    tiff: 'image/tiff',
   }
   
   return mimeMapping[format];
 }
 
-export const registerShutdown = (fn: any) => {
+export const registerShutdown = (fn) => {
   let run = false;
 
   const wrapper = () => {
@@ -87,21 +89,21 @@ export const registerShutdown = (fn: any) => {
   process.on("exit", wrapper);
 };
 
-export function patchViewer(indexPath: any, presentUuidList: any, labelList: any, viewer: any) {
+export function patchViewer(indexPath, presentUuidList, labelList, viewer) {
   const iiifVersion = getIIIFVersion(viewer);
   let indexStr = fs.readFileSync(indexPath).toString();
   let manifestListStr = "";
   let aList;
   switch (viewer) {
       case 'm2':
-          manifestListStr = JSON.stringify(presentUuidList.map((e: any) => ({ manifestUri: `p/${iiifVersion}/${e}/manifest.json`, location: 'ETU' })))
+          manifestListStr = JSON.stringify(presentUuidList.map((e) => ({ manifestUri: `p/${iiifVersion}/${e}/manifest.json`, location: 'ETU' })))
 
           indexStr = indexStr.replace("'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'", manifestListStr);
           fs.writeFileSync(indexPath, indexStr);
           break;
       case 'm3':
-          manifestListStr = JSON.stringify(presentUuidList.map((e: any) => ({ manifestId: `p/${iiifVersion}/${e}/manifest.json`, provider: 'ETU' })))
-          indexStr = indexStr.replace("'$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'", JSON.stringify(presentUuidList.map((e: any) => ({ "manifestId": `p/${iiifVersion}/${e}/manifest.json` }))));
+          manifestListStr = JSON.stringify(presentUuidList.map((e) => ({ manifestId: `p/${iiifVersion}/${e}/manifest.json`, provider: 'ETU' })))
+          indexStr = indexStr.replace("'$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'", JSON.stringify(presentUuidList.map((e) => ({ "manifestId": `p/${iiifVersion}/${e}/manifest.json` }))));
 
           indexStr = indexStr.replace("'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'", manifestListStr);
           fs.writeFileSync(indexPath, indexStr);
@@ -110,13 +112,13 @@ export function patchViewer(indexPath: any, presentUuidList: any, labelList: any
           if (presentUuidList.length === 1) {
               fs.writeFileSync(indexPath, indexStr.replace("'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'", `"p/${iiifVersion}/${presentUuidList[0]}/manifest.json"`));
           } else {
-              presentUuidList.forEach((e: any, i: any) => {
+              presentUuidList.forEach((e, i) => {
                   manifestListStr = `"p/${iiifVersion}/${e}/manifest.json"`;
 
                   fs.writeFileSync(path.join(cwd, "asset", `${e}.html`), indexStr.replace("'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'", manifestListStr));
               });
               fs.cpSync(path.join(__dirname, "viewer", "index_template.html"), path.join(cwd, "asset", "index.html"));
-              aList = presentUuidList.map((e: any, i: any) => `<a href="${e}.html" style="color: white;" target="_blank">${labelList[i]}</a>`).join("<br>");
+              aList = presentUuidList.map((e, i) => `<a href="${e}.html" style="color: white;" target="_blank">${labelList[i]}</a>`).join("<br>");
 
               indexStr = fs.readFileSync(indexPath).toString();
               fs.writeFileSync(indexPath, indexStr.replace("'$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'", aList));
@@ -126,13 +128,13 @@ export function patchViewer(indexPath: any, presentUuidList: any, labelList: any
           if (presentUuidList.length === 1) {
               fs.writeFileSync(indexPath, indexStr.replace("'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'", `"p/${iiifVersion}/${presentUuidList[0]}/manifest.json"`));
           } else {
-              presentUuidList.forEach((e: any, i: any) => {
+              presentUuidList.forEach((e, i) => {
                   manifestListStr = `"p/${iiifVersion}/${e}/manifest.json"`;
 
                   fs.writeFileSync(path.join(cwd, "asset", `${e}.html`), indexStr.replace("'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'", manifestListStr));
               });
               fs.cpSync(path.join(__dirname, "viewer", "index_template.html"), path.join(cwd, "asset", "index.html"));
-              aList = presentUuidList.map((e: any, i: any) => `<a href="${e}.html" style="color: white;" target="_blank">${labelList[i]}</a>`).join("<br>");
+              aList = presentUuidList.map((e, i) => `<a href="${e}.html" style="color: white;" target="_blank">${labelList[i]}</a>`).join("<br>");
 
               indexStr = fs.readFileSync(indexPath).toString();
               fs.writeFileSync(indexPath, indexStr.replace("'$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'", aList));
@@ -143,13 +145,13 @@ export function patchViewer(indexPath: any, presentUuidList: any, labelList: any
   }
 }
 
-export function generateManifest(rootPath: any, etuYaml: any, presentBaseUrl: string, imageBaseUrl: string) {
+export function generateManifest(rootPath, etuYaml, presentBaseUrl, imageBaseUrl) {
   const iiifVersion = getIIIFVersion(etuYaml.viewer);
-  const labelList = etuYaml.images.map((item: any) => item.label);
+  const labelList = etuYaml.images.map((item) => item.label);
   const presentUuidList = [];
 
   for (const image of etuYaml.images) {
-      const model: any = {
+      const model = {
           presentBaseUrl,
           imageBaseUrl,
           format: etuYaml.format,
@@ -159,9 +161,9 @@ export function generateManifest(rootPath: any, etuYaml: any, presentBaseUrl: st
       image.presentUuid = model.presentUuid;
       presentUuidList.push(model.presentUuid);
 
-      const items: any = []
+      const items = []
       for (const file of image.files) {
-          const item: any = file
+          const item = file
           item.level0 = true; // generate level0 image
           item.canvasUuid = uuid();
 
@@ -179,8 +181,8 @@ export function generateManifest(rootPath: any, etuYaml: any, presentBaseUrl: st
           items.push(item);
       }
 
-      function addLastMark(arr: any) {
-          return arr.map((e: any, i: any, a: any) => {
+      function addLastMark(arr) {
+          return arr.map((e, i, a) => {
               if (a.length === i + 1) {
                   e.last = true;
               }

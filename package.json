@@ -3,15 +3,11 @@
   "version": "0.2.2",
   "description": "command line tool to lanch iiif in localhost",
   "scripts": {
-    "start": "npm run watch",
-    "watch": "tsc -w",
-    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "etu",
-    "iiif",
-    "ipfs"
+    "iiif"
   ],
   "publishConfig": {
     "access": "public",
@@ -23,10 +19,9 @@
     "bin",
     "viewer",
     "template",
-    "lib",
     "cookbook"
   ],
-  "main": "./lib/index.js",
+  "main": "./src/index.mjs",
   "bin": {
     "etu": "bin/etu"
   },
@@ -50,23 +45,9 @@
     "open-in-editor": "^2.2.0",
     "ora": "^6.1.0",
     "serve-handler": "^6.1.3",
-    "sharp": "^0.31.2",
+    "sharp": "^0.32.1",
+    "@etu-wiki/iiif-image-shims": "^0.0.3",
     "tar": "^6.1.11",
     "uuid": "^8.3.2"
-  },
-  "devDependencies": {
-    "@etu-wiki/iiif-image-shims": "^0.0.3",
-    "@types/commander": "^2.12.2",
-    "@types/compression": "^1.7.2",
-    "@types/inquirer": "^9.0.3",
-    "@types/js-yaml": "^4.0.5",
-    "@types/livereload": "^0.9.2",
-    "@types/md5": "^2.3.2",
-    "@types/mustache": "^4.2.2",
-    "@types/node": "^18.11.9",
-    "@types/serve-handler": "^6.1.1",
-    "@types/sharp": "^0.31.0",
-    "@types/uuid": "^8.3.4",
-    "typescript": "^4.9.3"
   }
 }

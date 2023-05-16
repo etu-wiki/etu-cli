@@ -10,7 +10,7 @@ const compressionHandler = promisify(compression());
 
 import open from "open";
 
-import { cwd, __dirname, generateManifest, patchViewer, getIIIFVersion, getViewerName, registerShutdown, info, error, bold, warning, underline } from '../utils/common.js';
+import { cwd, __dirname, generateManifest, patchViewer, getIIIFVersion, getViewerName, registerShutdown, info, error, bold, warning, underline } from './common.mjs';
 import { createServer as createHttpServer } from "http";
 import { createServer as createSecureHttpSever } from "https";
 
@@ -35,7 +35,7 @@ import livereload from "livereload";
 
 const start = Date.now();
 
-function generateCookbookManifest(rootPath: string, etuYaml: any) {
+function generateCookbookManifest(rootPath, etuYaml) {
     const presentUuid = etuYaml.images[0].presentUuid
     const cookbookPath = path.join(__dirname, "cookbook", presentUuid);
 
@@ -54,11 +54,11 @@ function generateCookbookManifest(rootPath: string, etuYaml: any) {
     patchViewer(indexPath, [presentUuid], [], etuYaml.viewer)
 }
 
-export function run(rootPath: string, options: any, etuYaml: any) {
+export function run(rootPath, options, etuYaml) {
     const iiifVersion = getIIIFVersion(etuYaml.viewer);
 
-    const severHandler = async (request: any, response: any) => {
-        const config: any = {}
+    const severHandler = async (request, response) => {
+        const config = {}
 
         config.public = rootPath;
 
@@ -84,7 +84,7 @@ export function run(rootPath: string, options: any, etuYaml: any) {
     const httpMode = options.sslCert && options.sslKey ? "https" : "http";
     const server = httpMode === "https" ? createSecureHttpSever({ key: fs.readFileSync(options.sslKey), cert: fs.readFileSync(options.sslCert) }, severHandler) : createHttpServer(severHandler);
 
-    server.on("error", (err: any) => {
+    server.on("error", (err) => {
         if (err.code === "EADDRINUSE" && options.port)
             console.error(error(`Failed to etu: ${err.stack}`));
         process.exit(1);
@@ -92,7 +92,7 @@ export function run(rootPath: string, options: any, etuYaml: any) {
 
     server.listen(options.port, async () => {
 
-        const details: any = server.address();
+        const details = server.address();
 
         registerShutdown(() => server.close());
 
@@ -151,7 +151,7 @@ export function run(rootPath: string, options: any, etuYaml: any) {
             const editor = openInEditor.configure({
                 editor: options.editor,
             });
-            etuYaml.images.forEach(async (e: { presentUuid: any; }) => {
+            etuYaml.images.forEach(async (e) => {
                 await editor.open(path.join(rootPath, `p/${iiifVersion}/${e.presentUuid}/manifest.json`));
             })
             console.log(info("If you can't see your change in the viewer, please reload the page") + "\n");
