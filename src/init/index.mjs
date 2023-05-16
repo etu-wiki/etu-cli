@@ -33,81 +33,79 @@ if (fs.readdirSync(process.cwd()).length > 0) {
       "Current folder is not empty. Please run etu init in an empty folder."
     )
   );
-} else {
-  console.log(INIT_PROMPT);
+  process.exit(1);
+}
+console.log(INIT_PROMPT);
 
-  const answer = {};
-  const q1q2 = await inquirer.prompt([
+const answer = {};
+const q1q2 = await inquirer.prompt([
+  {
+    type: "input",
+    name: "name",
+    message: "What is the name of your ETU project?(1/4)",
+    default: path.basename(process.cwd()),
+    validate(input) {
+      return input.length > 0 ? true : "You must provide a project name";
+    },
+  },
+  {
+    type: "list",
+    name: "viewer",
+    message: "Which viewer would you like to use?(2/4)",
+    choices: [
+      { name: "Mirador 2 (iiif 2)", value: "m2" },
+      { name: "Mirador 3 (iiif 3)", value: "m3" },
+      { name: "Universal Viewer 3 (iiif 2)", value: "u3" },
+      { name: "Universal Viewer 4 (iiif 3)", value: "u4" },
+    ],
+  },
+]);
+
+answer.name = q1q2.name;
+answer.viewer = q1q2.viewer;
+
+const images = [];
+let isContinue;
+do {
+  const q3 = await inquirer.prompt([
     {
       type: "input",
-      name: "name",
-      message: "What is the name of your ETU project?(1/4)",
-      default: path.basename(process.cwd()),
+      name: "path",
+      message: "What is the path of your source image(s)?(3/4)\n",
       validate(input) {
-        return input.length > 0 ? true : "You must provide a project name";
+        return existsSync(input) ? true : "You must provide a valid path";
       },
-    },
-    {
-      type: "list",
-      name: "viewer",
-      message: "Which viewer would you like to use?(2/4)",
-      choices: [
-        { name: "Mirador 2 (iiif 2)", value: "m2" },
-        { name: "Mirador 3 (iiif 3)", value: "m3" },
-        { name: "Universal Viewer 3 (iiif 2)", value: "u3" },
-        { name: "Universal Viewer 4 (iiif 3)", value: "u4" },
-      ],
     },
   ]);
-
-  answer.name = q1q2.name;
-  answer.viewer = q1q2.viewer;
-
-  const images = [];
-  let isContinue;
-  do {
-    const q3 = await inquirer.prompt([
-      {
-        type: "input",
-        name: "path",
-        message:
-          "What is the path of your source image(s)?(3/4)\n",
-        validate(input) {
-          return existsSync(input) ? true : "You must provide a valid path";
-        },
-      },
-    ]);
-    images.push({ path: path.normalize(path.resolve(q3.path)) });
-    isContinue = await inquirer.prompt([
-      {
-        type: "confirm",
-        name: "continue",
-        message: "Do you want to add another image path?",
-      },
-    ]);
-  } while (isContinue.continue);
-
-  answer.images = images;
-
-  const q4 = await inquirer.prompt([
+  images.push({ path: path.normalize(path.resolve(q3.path)) });
+  isContinue = await inquirer.prompt([
     {
-      type: "list",
-      name: "format",
-      message:
-        "What is your iiif image format?(4/4)",
-      choices: [
-        { name: "jpeg", value: "jpg" },
-        { name: "webp", value: "webp" },
-        { name: "gif", value: "gif" },
-        { name: "png", value: "png" },
-      ],
+      type: "confirm",
+      name: "continue",
+      message: "Do you want to add another image path?",
     },
   ]);
+} while (isContinue.continue);
 
-  answer.format = q4.format;
+answer.images = images;
 
-  writeFileSync(
-    path.join(process.cwd(), "etu.yaml"),
-    yaml.dump({ version: pkg.version, ...answer })
-  );
-}
+const q4 = await inquirer.prompt([
+  {
+    type: "list",
+    name: "format",
+    message: "What is your iiif image format?(4/4)",
+    choices: [
+      { name: "jpeg", value: "jpg" },
+      { name: "webp", value: "webp" },
+      { name: "gif", value: "gif" },
+      { name: "png", value: "png" },
+    ],
+  },
+]);
+
+answer.format = q4.format;
+
+writeFileSync(
+  path.join(process.cwd(), "etu.yaml"),
+  yaml.dump({ version: pkg.version, ...answer })
+);

@@ -17,3 +17,11 @@
 
 * support mirador 2
 * fix thumbnail issue
+
+## [v0.1.8] - 
+
+* change typescript to mjs
+* expand more than one level image folder
+* add size threshold to prevent jpeg size overflow
+* remove ipfs for security reason
+* auto rotate thumbnail image

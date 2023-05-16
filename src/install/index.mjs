@@ -34,6 +34,11 @@ program
   .parse(process.argv);
 
 let loadYaml = path.join(cwd, "etu.yaml");
+if (!fs.existsSync(loadYaml)) {
+  console.log(error("Please run 'etu init' first."));
+  process.exit(1);
+}
+
 if (fs.existsSync(path.join(cwd, "etu-lock.yaml"))) {
   loadYaml = path.join(cwd, "etu-lock.yaml");
 }
@@ -50,7 +55,7 @@ function isAcceptableImage(file) {
 async function expandPath(image, rootPath) {
   const entry = image.path;
   let files;
-  const fileDetails = [];
+  const fileInfoList = [];
   if (fs.lstatSync(entry).isDirectory()) {
     files = fs.readdirSync(entry);
   } else {
@@ -79,14 +84,25 @@ async function expandPath(image, rootPath) {
       const fileInfo = {};
       if (meta && meta.height && meta.width) {
         console.log(info(`Processing ${sourceFile}`));
+
+        // adjust orientation if necessary
+        if (meta.orientation >= 5) {
+          const t = meta.height;
+          meta.height = meta.width;
+          meta.width = t;
+        }
+
         if (meta.height > SIZE_THRESHOLD || meta.width > SIZE_THRESHOLD) {
-          console.log(info(`Resizing ${sourceFile}`));
           image = image.resize({
             height: SIZE_THRESHOLD,
             width: SIZE_THRESHOLD,
             fit: "inside",
           });
+
+          const spinner = ora(`Resizing ${sourceFile}`).start();
           const res = await image.toBuffer({ resolveWithObject: true });
+          spinner.stop();
+
           meta.height = res.info.height;
           meta.width = res.info.width;
         }
@@ -126,7 +142,7 @@ async function expandPath(image, rootPath) {
           )
         );
 
-        const thumbnail = image.resize({
+        let thumbnail = image.resize({
           width: THUMB_DIM_LIMIT,
           height: THUMB_DIM_LIMIT,
           fit: "inside",
@@ -136,26 +152,29 @@ async function expandPath(image, rootPath) {
           fileInfo.etag,
           "thumbnail." + etuYaml.format
         );
-        thumbnail.toFile(thumbnailPath);
+        if (meta.orientation && meta.orientation != 1) {
+          thumbnail = thumbnail.rotate()
+        }
+        thumbnail.toFile(thumbnailPath)
 
-        fileDetails.push(fileInfo);
+        fileInfoList.push(fileInfo)
       }
     }
   }
 
-  if (fileDetails.length > 1) {
+  if (fileInfoList.length > 1) {
     // if there are multiple files, use the folder name
     image.label = entry
       .replace(rootPath, "")
       .replace(/\\/g, " ")
       .replace(/\//g, " ")
       .trim();
-  } else if (fileDetails.length === 1) {
+  } else if (fileInfoList.length === 1) {
     // if there is only one file, use the file name
-    image.label = fileDetails[0].label;
+    image.label = fileInfoList[0].label;
   }
 
-  image.files = fileDetails;
+  image.files = fileInfoList;
 }
 
 // install images
