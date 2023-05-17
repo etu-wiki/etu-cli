@@ -53,10 +53,10 @@ const q1q2 = await inquirer.prompt([
     name: "viewer",
     message: "Which viewer would you like to use?(2/4)",
     choices: [
-      { name: "Mirador 2 (iiif 2)", value: "m2" },
       { name: "Mirador 3 (iiif 3)", value: "m3" },
-      { name: "Universal Viewer 3 (iiif 2)", value: "u3" },
-      { name: "Universal Viewer 4 (iiif 3)", value: "u4" },
+      { name: "Universal Viewer 4 (iiif 2)", value: "u4" },
+      { name: "Mirador 2 (iiif 2)", value: "m2" },
+      { name: "Universal Viewer 3 (iiif 2)", value: "u3" }
     ],
   },
 ]);
@@ -89,21 +89,23 @@ do {
 
 answer.images = images;
 
-const q4 = await inquirer.prompt([
-  {
-    type: "list",
-    name: "format",
-    message: "What is your iiif image format?(4/4)",
-    choices: [
-      { name: "jpeg", value: "jpg" },
-      { name: "webp", value: "webp" },
-      { name: "gif", value: "gif" },
-      { name: "png", value: "png" },
-    ],
-  },
-]);
+// const q4 = await inquirer.prompt([
+//   {
+//     type: "list",
+//     name: "format",
+//     message: "What is your iiif image format?(4/4)",
+//     choices: [
+//       { name: "jpeg", value: "jpg" },
+//       { name: "webp", value: "webp" },
+//       { name: "gif", value: "gif" },
+//       { name: "png", value: "png" },
+//     ],
+//   },
+// ]);
 
-answer.format = q4.format;
+// answer.format = q4.format;
+// hardcode for this version
+answer.format = 'jpg'
 
 writeFileSync(
   path.join(process.cwd(), "etu.yaml"),

@@ -3,6 +3,7 @@ import {
   cwd,
   __dirname,
   getIIIFVersion,
+  geImageAPIVersion,
   getMimeType,
   info,
   error,
@@ -14,10 +15,13 @@ import path from "path";
 import sharp from "sharp";
 import ora from "ora";
 import md5File from "md5-file";
+import { execSync } from "child_process";
+import SharpIiifShims from "@etu-wiki/sharp-iiif-shims";
 
 // generate thumbnail
-const THUMB_DIM_LIMIT = 400;
-const SIZE_THRESHOLD = 10000;
+const WIDTH_SCALE = 4
+const THUMB_DIM_LIMIT = 400
+const DIM_THRESHOLD = 10000
 
 const start = Date.now();
 
@@ -92,21 +96,6 @@ async function expandPath(image, rootPath) {
           meta.width = t;
         }
 
-        if (meta.height > SIZE_THRESHOLD || meta.width > SIZE_THRESHOLD) {
-          image = image.resize({
-            height: SIZE_THRESHOLD,
-            width: SIZE_THRESHOLD,
-            fit: "inside",
-          });
-
-          const spinner = ora(`Resizing ${sourceFile}`).start();
-          const res = await image.toBuffer({ resolveWithObject: true });
-          spinner.stop();
-
-          meta.height = res.info.height;
-          meta.width = res.info.width;
-        }
-
         fileInfo.filename = path.basename(file);
         fileInfo.label = path.basename(file, path.extname(file));
         fileInfo.height = meta.height;
@@ -117,16 +106,35 @@ async function expandPath(image, rootPath) {
           recursive: true,
         });
 
-        const targetFile = path.join(
-          imageFolder,
-          fileInfo.etag + "." + etuYaml.format
-        );
-        if (getMimeType(meta.format) !== getMimeType(etuYaml.format)) {
-          const spinner = ora(`Converting ${sourceFile}`).start();
-          await image.toFile(targetFile);
+        if (meta.height > DIM_THRESHOLD || meta.width > DIM_THRESHOLD) {
+          // level 2, dynamic tiles
+          fileInfo.tile = true
+          const spinner = ora(`Converting standard ${file}`).start();
+          const command = `vips dzsave ${sourceFile} ${path.join(imageFolder, fileInfo.etag)} --id http://localhost:3000/${"i/" + iiifVersion} --suffix .${etuYaml.format} --tile-size 512 --layout ${"iiif" + (iiifVersion === "2" ? "" : "3")}`
+          execSync(command)
+
+          // await image
+          //   .tile({
+          //     layout: "iiif" + (iiifVersion === "2" ? "" : "3"),
+          //     id: "i/" + iiifVersion,
+          //     size: 512,
+          //   })
+          //   .toFile(path.join(imageFolder, fileInfo.etag));  
+
           spinner.stop();
         } else {
-          fs.copyFileSync(sourceFile, targetFile);
+          fileInfo.level0 = true;
+          const targetFile = path.join(
+            imageFolder,
+            fileInfo.etag + "." + etuYaml.format
+          );
+          if (getMimeType(meta.format) !== getMimeType(etuYaml.format)) {
+            const spinner = ora(`Converting standard express ${sourceFile} l0`).start();
+            await image.toFile(targetFile);
+            spinner.stop();
+          } else {
+            fs.copyFileSync(sourceFile, targetFile);
+          }
         }
 
         fileInfo.thumbHeight = Math.round(
@@ -143,7 +151,7 @@ async function expandPath(image, rootPath) {
         );
 
         let thumbnail = image.resize({
-          width: THUMB_DIM_LIMIT,
+          width: THUMB_DIM_LIMIT * WIDTH_SCALE,
           height: THUMB_DIM_LIMIT,
           fit: "inside",
         });
@@ -153,11 +161,11 @@ async function expandPath(image, rootPath) {
           "thumbnail." + etuYaml.format
         );
         if (meta.orientation && meta.orientation != 1) {
-          thumbnail = thumbnail.rotate()
+          thumbnail = thumbnail.rotate();
         }
-        thumbnail.toFile(thumbnailPath)
+        thumbnail.toFile(thumbnailPath);
 
-        fileInfoList.push(fileInfo)
+        fileInfoList.push(fileInfo);
       }
     }
   }

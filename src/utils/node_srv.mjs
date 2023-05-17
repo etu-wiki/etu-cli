@@ -63,14 +63,15 @@ export function run(rootPath, options, etuYaml) {
         config.public = rootPath;
 
         // to disploy thumbnail for etu project
-        if (etuYaml.name && (etuYaml.viewer === "m2" || etuYaml.viewer === "u3")) {
+        // if (etuYaml.name && (etuYaml.viewer === "m2" || etuYaml.viewer === "u3")) {
             config.redirects = [
                 {
                     source: `/i/${iiifVersion}/:id/full/:width/0/default.${etuYaml.format}`,
-                    destination: `/i/${iiifVersion}/:id.${etuYaml.format}`,
+                    destination: `/i/${iiifVersion}/:id/thumbnail.${etuYaml.format}`,
                 },
             ];
-        }
+        // }
+
         // set CORS headers
         if (options.cors) {
             response.setHeader("Access-Control-Allow-Origin", "*");

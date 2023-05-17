@@ -21,7 +21,7 @@
             "width": {{ width }},
             "thumbnail": [
                 {
-                "id": "i/3/{{ etag }}/thumbnail.{{ format }}",
+                "id": "{{{ imageBaseUrl }}}/i/3/{{ etag }}/thumbnail.{{ format }}",
                 "type": "Image",
                 "format": "image/jpeg",
                 "height": {{ thumbHeight }},
@@ -38,7 +38,7 @@
                             "type": "Annotation",
                             "motivation": "painting",
                             "body": {
-                                "id": "i/3/{{ etag }}{{^tile}}.{{ format }}{{/tile}}",
+                                "id": "{{{ imageBaseUrl }}}/i/3/{{ etag }}{{^tile}}.{{ format }}{{/tile}}",
                                 "type": "Image",
                                 "format": "image/jpeg",
                                 "height": {{ height }},
@@ -47,9 +47,9 @@
                                 ,
                                 "service": [
                                     {
-                                        "id": "i/3/{{ etag }}",
+                                        "id": "{{{ imageBaseUrl }}}/i/3/{{ etag }}",
                                         "type": "ImageService3",
-                                        "profile": "level2"
+                                        "profile": "level0"
                                     }
                                 ]
                                 {{/level0}}

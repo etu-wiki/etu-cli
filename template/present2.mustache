@@ -16,7 +16,7 @@
                     "@type": "sc:Canvas",
                     "label": "{{ label }}",
                     "thumbnail" : {
-                        "@id" : "i/2/{{ etag }}/thumbnail.{{ format }}",
+                        "@id" : "{{{ imageBaseUrl }}}/i/2/{{ etag }}/thumbnail.{{ format }}",
                         "@type": "dctypes:Image",
                         "height": {{ thumbHeight }},
                         "width": {{ thumbWidth }}
@@ -27,7 +27,7 @@
                             "@type": "oa:Annotation",
                             "motivation": "sc:painting",
                             "resource": {
-                                "@id": "i/2/{{ etag }}{{^tile}}.{{ format }}{{/tile}}",
+                                "@id": "{{{ imageBaseUrl }}}/i/2/{{ etag }}{{^tile}}.{{ format }}{{/tile}}",
                                 "@type": "dctypes:Image",
                                 "format": "image/jpeg",
                                 "height": {{ height }},
@@ -36,8 +36,8 @@
                                 ,
                                 "service": {
                                     "@context": "http://iiif.io/api/image/2/context.json",
-                                    "@id": "i/2/{{ etag }}",
-                                    "profile": "http://iiif.io/api/image/2/level2.json"
+                                    "@id": "{{{ imageBaseUrl }}}/i/2/{{ etag }}",
+                                    "profile": "http://iiif.io/api/image/2/level0.json"
                                 }
                                 {{/level0}}
                             },
