@@ -256,9 +256,8 @@ export function generateManifest(
       item.canvasUuid = uuid();
 
       // Add info.json for tiled image
-      console.log('tile: ' + item.tile)
       if (item.tile === true) {
-        console.log('for tile')
+        // console.log('for tile')
         const processor = new SharpIiifShims(
           geImageAPIVersion(etuYaml.viewer),
           0,
@@ -276,7 +275,7 @@ export function generateManifest(
           JSON.stringify(imageInfo.info)
         );
       } else if (iiifVersion === "2") {
-        console.log('for iiif2')
+        // console.log('for iiif2')
         // Update info.json for IIIF 2
         const processor = new IIIFImageShims(geImageAPIVersion(etuYaml.viewer), "0", "." + etuYaml.format);
 
