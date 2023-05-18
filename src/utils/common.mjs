@@ -228,21 +228,17 @@ export function patchViewer(indexPath, presentUuidList, labelList, viewer) {
   }
 }
 
-export function generateManifest(
-  rootPath,
-  etuYaml,
-  presentBaseUrl,
-  imageBaseUrl
-) {
+export function generateManifest(rootPath, etuYaml, isRemote) {
   const iiifVersion = getIIIFVersion(etuYaml.viewer);
   const labelList = etuYaml.images.map((item) => item.label);
   const presentUuidList = [];
+  const { presentBaseUrl, imageBaseUrl, format } = etuYaml;
 
   for (const image of etuYaml.images) {
     const model = {
       presentBaseUrl,
       imageBaseUrl,
-      format: etuYaml.format,
+      format,
       label: image.label,
       presentUuid: uuid(),
     };
@@ -251,44 +247,56 @@ export function generateManifest(
 
     const items = [];
     for (const file of image.files) {
-      const item = file;
+      // deep copy file object
+      const item = JSON.parse(JSON.stringify(file));
       // item.level0 = true; // generate level0 image
       item.canvasUuid = uuid();
 
-      // Add info.json for tiled image
-      if (item.tile === true) {
-        // console.log('for tile')
-        const processor = new SharpIiifShims(
-          geImageAPIVersion(etuYaml.viewer),
-          0,
-          "." + etuYaml.format
-        );
-        const imageInfo = processor.generateImageInfo(
-          imageBaseUrl + "/i/" + iiifVersion + "/" + item.etag,
-          { width: item.width, height: item.height }
-        );
-        delete imageInfo.info.extraFormats;
-        delete imageInfo.info.preferredFormats;
-        // console.log(imageInfo);
-        fs.writeFileSync(
-          path.join(rootPath, "i", iiifVersion, item.etag, "info.json"),
-          JSON.stringify(imageInfo.info)
-        );
-      } else if (iiifVersion === "2") {
-        // console.log('for iiif2')
-        // Update info.json for IIIF 2
-        const processor = new IIIFImageShims(geImageAPIVersion(etuYaml.viewer), "0", "." + etuYaml.format);
+      if (isRemote) {
+        // remote server is level2 and is all tiled
+        item.tile = true;
+        delete item.level0;
+      } else {
+        // Add info.json for tiled image
+        if (item.tile === true) {
+          // console.log('for tile')
+          const processor = new SharpIiifShims(
+            geImageAPIVersion(etuYaml.viewer),
+            0,
+            "." + format
+          );
+          const imageInfo = processor.generateImageInfo(
+            imageBaseUrl + "/" + item.image_id,
+            { width: item.width, height: item.height }
+          );
+          delete imageInfo.info.extraFormats;
+          delete imageInfo.info.preferredFormats;
+          // console.log(imageInfo);
+          fs.writeFileSync(
+            path.join(rootPath, "i", iiifVersion, item.image_id, "info.json"),
+            JSON.stringify(imageInfo.info)
+          );
+        } else if (iiifVersion === "2") {
+          // console.log('for iiif2')
+          // Update info.json for IIIF 2
+          const processor = new IIIFImageShims(
+            geImageAPIVersion(etuYaml.viewer),
+            "0",
+            "." + format
+          );
 
-        const imageInfo = processor.generateImageInfoTemp(
-          imageBaseUrl + "/i/" + iiifVersion + "/" + item.etag,
-          { width: item.width, height: item.height }
-        );
-        // console.log(imageInfo);
-        fs.writeFileSync(
-          path.join(rootPath, "i", iiifVersion, item.etag, "info.json"),
-          JSON.stringify(imageInfo.info)
-        );
+          const imageInfo = processor.generateImageInfoTemp(
+            imageBaseUrl + "/" + item.image_id,
+            { width: item.width, height: item.height }
+          );
+          // console.log(imageInfo);
+          fs.writeFileSync(
+            path.join(rootPath, "i", iiifVersion, item.image_id, "info.json"),
+            JSON.stringify(imageInfo.info)
+          );
+        }
       }
+
       items.push(item);
     }
 

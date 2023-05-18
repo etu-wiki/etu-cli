@@ -23,7 +23,7 @@ import {
   bold,
   warning,
   underline,
-} from "./common.mjs";
+} from "../utils/common.mjs";
 import { createServer as createHttpServer } from "http";
 import { createServer as createSecureHttpSever } from "https";
 
@@ -160,16 +160,24 @@ export function run(rootPath, options, etuYaml) {
     }
 
     // etuYaml with name is etu project and should generate manifest and index.html
-    if (!options.cookbook) {
-      if (baseUrl !== etuYaml.presentBaseUrl) {
+    if (options.cookbook) {
+      generateCookbookManifest(rootPath, etuYaml);
+    } else {
+      let imageBaseUrl
+      if(options.remote) {
+        imageBaseUrl = 'http://stagingcn.image.huiyouwenhua.com';
+      } else {
+        imageBaseUrl = baseUrl + '/i/' + getIIIFVersion(etuYaml.viewer);
+      }
+      if (baseUrl !== etuYaml.presentBaseUrl || imageBaseUrl !== etuYaml.imageBaseUrl) {
         console.log(info(`Generating Manifests`));
-        generateManifest(rootPath, etuYaml, baseUrl, baseUrl);
-        etuYaml.presentBaseUrl = baseUrl;
-        etuYaml.imageBaseUrl = baseUrl;
+        etuYaml.presentBaseUrl = baseUrl + '/p/' + getIIIFVersion(etuYaml.viewer);
+        etuYaml.imageBaseUrl = imageBaseUrl
+
+        generateManifest(rootPath, etuYaml, options.remote);
+
         fs.writeFileSync(`${cwd}/etu-lock.yaml`, yaml.dump(etuYaml));
       }
-    } else {
-      generateCookbookManifest(rootPath, etuYaml);
     }
 
     open(url);

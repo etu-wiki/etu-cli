@@ -1,6 +1,6 @@
 {
     "@context": "http://iiif.io/api/presentation/3/context.json",
-    "id": "{{{ presentBaseUrl }}}/p/3/{{ presentUuid }}/manifest.json",
+    "id": "{{{ presentBaseUrl }}}/{{ presentUuid }}/manifest.json",
     "type": "Manifest",
     "label": {
         "zh-Hant": [
@@ -21,7 +21,7 @@
             "width": {{ width }},
             "thumbnail": [
                 {
-                "id": "{{{ imageBaseUrl }}}/i/3/{{ etag }}/thumbnail.{{ format }}",
+                "id": "{{{ imageBaseUrl }}}/{{ image_id }}/thumbnail.{{ format }}",
                 "type": "Image",
                 "format": "image/jpeg",
                 "height": {{ thumbHeight }},
@@ -38,7 +38,7 @@
                             "type": "Annotation",
                             "motivation": "painting",
                             "body": {
-                                "id": "{{{ imageBaseUrl }}}/i/3/{{ etag }}{{^tile}}.{{ format }}{{/tile}}",
+                                "id": "{{{ imageBaseUrl }}}/{{ image_id }}{{^tile}}.{{ format }}{{/tile}}",
                                 "type": "Image",
                                 "format": "image/jpeg",
                                 "height": {{ height }},
@@ -47,9 +47,9 @@
                                 ,
                                 "service": [
                                     {
-                                        "id": "{{{ imageBaseUrl }}}/i/3/{{ etag }}",
+                                        "id": "{{{ imageBaseUrl }}}/{{ image_id }}",
                                         "type": "ImageService3",
-                                        "profile": "level0"
+                                        "profile": "level2"
                                     }
                                 ]
                                 {{/level0}}

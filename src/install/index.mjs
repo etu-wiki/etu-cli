@@ -1,4 +1,5 @@
 import { program } from "commander";
+import { v4 as uuid } from "uuid";
 import {
   cwd,
   __dirname,
@@ -19,13 +20,13 @@ import { execSync } from "child_process";
 import SharpIiifShims from "@etu-wiki/sharp-iiif-shims";
 
 // generate thumbnail
-const WIDTH_SCALE = 4
-const THUMB_DIM_LIMIT = 400
-const DIM_THRESHOLD = 10000
+const WIDTH_SCALE = 4;
+const THUMB_DIM_LIMIT = 400;
+const DIM_THRESHOLD = 10000;
 
 const start = Date.now();
 
-const description = `Install a new ETU project
+const description = `Prepare IIIF asset for ETU project
 
     Example:
         $ etu install`;
@@ -100,18 +101,29 @@ async function expandPath(image, rootPath) {
         fileInfo.label = path.basename(file, path.extname(file));
         fileInfo.height = meta.height;
         fileInfo.width = meta.width;
-        fileInfo.etag = md5File.sync(sourceFile);
+        // fileInfo.image_id = md5File.sync(sourceFile);
+        fileInfo.image_id = uuid();
+        const stats = fs.statSync(path.join(entry, fileInfo.filename));
+        fileInfo.size = stats.size;
+        // fileInfo.format = meta.format;
 
-        fs.mkdirSync(path.join(imageFolder, fileInfo.etag), {
+        fs.mkdirSync(path.join(imageFolder, fileInfo.image_id), {
           recursive: true,
         });
 
         if (meta.height > DIM_THRESHOLD || meta.width > DIM_THRESHOLD) {
           // level 2, dynamic tiles
-          fileInfo.tile = true
-          const spinner = ora(`Converting standard ${file}`).start();
-          const command = `vips dzsave ${sourceFile} ${path.join(imageFolder, fileInfo.etag)} --id http://localhost:3000/${"i/" + iiifVersion} --suffix .${etuYaml.format} --tile-size 512 --layout ${"iiif" + (iiifVersion === "2" ? "" : "3")}`
-          execSync(command)
+          fileInfo.tile = true;
+          const spinner = ora(`Converting standard ${file} `).start();
+          const command = `vips dzsave ${sourceFile} ${path.join(
+            imageFolder,
+            fileInfo.image_id
+          )} --id http://localhost:3000/${"i/" + iiifVersion} --suffix .${
+            etuYaml.format
+          } --tile-size 512 --layout ${
+            "iiif" + (iiifVersion === "2" ? "" : "3")
+          }`;
+          execSync(command);
 
           // await image
           //   .tile({
@@ -119,17 +131,19 @@ async function expandPath(image, rootPath) {
           //     id: "i/" + iiifVersion,
           //     size: 512,
           //   })
-          //   .toFile(path.join(imageFolder, fileInfo.etag));  
+          //   .toFile(path.join(imageFolder, fileInfo.image_id));
 
           spinner.stop();
         } else {
           fileInfo.level0 = true;
           const targetFile = path.join(
             imageFolder,
-            fileInfo.etag + "." + etuYaml.format
+            fileInfo.image_id + "." + etuYaml.format
           );
           if (getMimeType(meta.format) !== getMimeType(etuYaml.format)) {
-            const spinner = ora(`Converting standard express ${sourceFile} l0`).start();
+            const spinner = ora(
+              `Converting standard express ${sourceFile} `
+            ).start();
             await image.toFile(targetFile);
             spinner.stop();
           } else {
@@ -157,7 +171,7 @@ async function expandPath(image, rootPath) {
         });
         const thumbnailPath = path.join(
           imageFolder,
-          fileInfo.etag,
+          fileInfo.image_id,
           "thumbnail." + etuYaml.format
         );
         if (meta.orientation && meta.orientation != 1) {
@@ -170,17 +184,11 @@ async function expandPath(image, rootPath) {
     }
   }
 
-  if (fileInfoList.length > 1) {
-    // if there are multiple files, use the folder name
-    image.label = entry
-      .replace(rootPath, "")
-      .replace(/\\/g, " ")
-      .replace(/\//g, " ")
-      .trim();
-  } else if (fileInfoList.length === 1) {
-    // if there is only one file, use the file name
-    image.label = fileInfoList[0].label;
-  }
+  image.label = entry
+    .replace(rootPath, "")
+    .replace(/\\/g, " ")
+    .replace(/\//g, " ")
+    .trim();
 
   image.files = fileInfoList;
 }

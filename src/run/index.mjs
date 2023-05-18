@@ -7,7 +7,7 @@ import {
   error,
   warning,
 } from "../utils/common.mjs";
-import { run } from "../utils/node_srv.mjs";
+import { run } from "./node_srv.mjs";
 import yaml from "js-yaml";
 import fs from "fs";
 import path from "path";
@@ -38,7 +38,7 @@ program
   )
   .option("-m, --modify-manifest", "Edit manifest in your favorite editor")
   .option("-V, --modify-viewer", "Edit viewer setting in your favorite editor")
-  .option("--ipfs", "Run in IPFS HTTP Gateway mode")
+  .option("--remote", "Run image server on etu.wiki")
   .option("--cookbook", "Run IIIF cookbook recipe in ETU")
   .helpOption("-h, --help", "Display help for command")
   .description(description)
@@ -147,6 +147,8 @@ if (options.cookbook) {
 } else {
   ETU_PATH = path.join(cwd, "asset");
   const etuLockYaml = path.join(cwd, "etu-lock.yaml");
+
+  // etu-lock.yaml has to be existed before
   if (!fs.existsSync(etuLockYaml)) {
     console.log(
       error(`No etu-lock.yaml found in ${cwd}  Please run 'etu install' first.`)
@@ -155,6 +157,17 @@ if (options.cookbook) {
   }
 
   etuYaml = yaml.load(fs.readFileSync(etuLockYaml).toString());
+
+  // when run in remote, the project has to be published before
+  if (!etuYaml.isPublished && options.remote) {
+    console.log(
+      error(`The ETU project can not run because it has not been published before.`)
+    );
+    process.exit(1);
+  }
+
+
+
 
   run(ETU_PATH, options, etuYaml);
 }
