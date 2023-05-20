@@ -19,6 +19,7 @@
             },
             "height": {{ height }},
             "width": {{ width }},
+            {{^remote}}
             "thumbnail": [
                 {
                 "id": "{{{ imageBaseUrl }}}/{{ image_id }}/thumbnail.{{ format }}",
@@ -28,6 +29,7 @@
                 "width": {{ thumbWidth }}
                 }
             ],
+            {{/remote}}
             "items": [
                 {
                     "id": "{{{ presentBaseUrl }}}/c/3/{{ canvasUuid }}/ap/p",

@@ -15,12 +15,14 @@
                     "@id": "{{{ presentBaseUrl }}}/c/2/{{ canvasUuid }}",
                     "@type": "sc:Canvas",
                     "label": "{{ label }}",
+                    {{^remote}}
                     "thumbnail" : {
                         "@id" : "{{{ imageBaseUrl }}}/{{ image_id }}/thumbnail.{{ format }}",
                         "@type": "dctypes:Image",
                         "height": {{ thumbHeight }},
                         "width": {{ thumbWidth }}
                     },
+                    {{/remote}}
                     "images": [
                         {
                             "@id": "{{{ presentBaseUrl }}}/c/2/{{ canvasUuid }}/ap/p",

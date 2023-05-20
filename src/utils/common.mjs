@@ -242,6 +242,9 @@ export function generateManifest(rootPath, etuYaml, isRemote) {
       label: image.label,
       presentUuid: uuid(),
     };
+    if (isRemote) {
+      model.remote = true;
+    }
     image.presentUuid = model.presentUuid;
     presentUuidList.push(model.presentUuid);
 
