@@ -52,7 +52,7 @@ export function getIIIFVersion(viewer) {
   return versionMapping[viewer];
 }
 
-export function geImageAPIVersion(viewer) {
+export function getImageAPIVersion(viewer) {
   const versionMapping = {
     m2: "2.1",
     m3: "3.0",
@@ -264,7 +264,7 @@ export function generateManifest(rootPath, etuYaml, isRemote) {
         if (item.tile === true) {
           // console.log('for tile')
           const processor = new SharpIiifShims(
-            geImageAPIVersion(etuYaml.viewer),
+            getImageAPIVersion(etuYaml.viewer),
             0,
             "." + format
           );
@@ -283,7 +283,7 @@ export function generateManifest(rootPath, etuYaml, isRemote) {
           // console.log('for iiif2')
           // Update info.json for IIIF 2
           const processor = new IIIFImageShims(
-            geImageAPIVersion(etuYaml.viewer),
+            getImageAPIVersion(etuYaml.viewer),
             "0",
             "." + format
           );

@@ -8,6 +8,8 @@ import compression from "compression";
 import { promisify } from "util";
 const compressionHandler = promisify(compression());
 
+import { IMAGE_API_ENDPOINT } from "../config.mjs";
+
 import open from "open";
 
 import {
@@ -165,7 +167,7 @@ export function run(rootPath, options, etuYaml) {
     } else {
       let imageBaseUrl
       if(options.remote) {
-        imageBaseUrl = 'http://stagingcn.image.huiyouwenhua.com';
+        imageBaseUrl = IMAGE_API_ENDPOINT;
       } else {
         imageBaseUrl = baseUrl + '/i/' + getIIIFVersion(etuYaml.viewer);
       }

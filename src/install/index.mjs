@@ -4,7 +4,7 @@ import {
   cwd,
   __dirname,
   getIIIFVersion,
-  geImageAPIVersion,
+
   getMimeType,
   info,
   error,

@@ -3,3 +3,4 @@ fixture
 test
 lib
 .DS_Store
+.credentials
