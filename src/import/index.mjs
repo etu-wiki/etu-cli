@@ -17,22 +17,18 @@ import sharp from "sharp";
 import ora from "ora";
 import md5File from "md5-file";
 import { execSync } from "child_process";
-import SharpIiifShims from "@etu-wiki/sharp-iiif-shims";
 
-// generate thumbnail
-const WIDTH_SCALE = 4;
-const THUMB_DIM_LIMIT = 400;
-const DIM_THRESHOLD = 10000;
+import { WIDTH_SCALE, THUMB_DIM_THRESHOLD, HD_DIM_THRESHOLD, TILE_DIM } from "../config.mjs";
 
 const start = Date.now();
 
-const description = `Prepare IIIF asset for ETU project
+const description = `Import images from local path.
 
     Example:
-        $ etu install`;
+        $ etu import`;
 
 program
-  .name("etu install")
+  .name("etu import")
   .helpOption("-h, --help", "Display help for command")
   .description(description)
   .addHelpCommand(false)
@@ -88,7 +84,7 @@ async function expandPath(image, rootPath) {
       // valid image file
       const fileInfo = {};
       if (meta && meta.height && meta.width) {
-        console.log(info(`Processing ${sourceFile}`));
+        console.log(info(`Importing ${sourceFile}`));
 
         // adjust orientation if necessary
         if (meta.orientation >= 5) {
@@ -111,16 +107,16 @@ async function expandPath(image, rootPath) {
           recursive: true,
         });
 
-        if (meta.height > DIM_THRESHOLD || meta.width > DIM_THRESHOLD) {
+        if (meta.height > HD_DIM_THRESHOLD || meta.width > HD_DIM_THRESHOLD) {
           // level 2, dynamic tiles
           fileInfo.tile = true;
           const spinner = ora(`Converting standard ${file} `).start();
           const command = `vips dzsave ${sourceFile} ${path.join(
             imageFolder,
             fileInfo.image_id
-          )} --id http://localhost:3000/${"i/" + iiifVersion} --suffix .${
+          )} --id ${"i/" + iiifVersion} --suffix .${
             etuYaml.format
-          } --tile-size 512 --layout ${
+          } --tile-size ${TILE_DIM} --layout ${
             "iiif" + (iiifVersion === "2" ? "" : "3")
           }`;
           execSync(command);
@@ -129,7 +125,7 @@ async function expandPath(image, rootPath) {
           //   .tile({
           //     layout: "iiif" + (iiifVersion === "2" ? "" : "3"),
           //     id: "i/" + iiifVersion,
-          //     size: 512,
+          //     size: TILE_DIM,
           //   })
           //   .toFile(path.join(imageFolder, fileInfo.image_id));
 
@@ -153,20 +149,20 @@ async function expandPath(image, rootPath) {
 
         fileInfo.thumbHeight = Math.round(
           Math.min(
-            THUMB_DIM_LIMIT,
-            (fileInfo.height / fileInfo.width) * THUMB_DIM_LIMIT
+            THUMB_DIM_THRESHOLD,
+            (fileInfo.height / fileInfo.width) * THUMB_DIM_THRESHOLD
           )
         );
         fileInfo.thumbWidth = Math.round(
           Math.min(
-            THUMB_DIM_LIMIT,
-            (fileInfo.width / fileInfo.height) * THUMB_DIM_LIMIT
+            THUMB_DIM_THRESHOLD,
+            (fileInfo.width / fileInfo.height) * THUMB_DIM_THRESHOLD
           )
         );
 
         let thumbnail = image.resize({
-          width: THUMB_DIM_LIMIT * WIDTH_SCALE,
-          height: THUMB_DIM_LIMIT,
+          width: THUMB_DIM_THRESHOLD * WIDTH_SCALE,
+          height: THUMB_DIM_THRESHOLD,
           fit: "inside",
         });
         const thumbnailPath = path.join(

@@ -72,6 +72,7 @@ const answer = await inquirer.prompt([
   },
 ]);
 
+let isConfirmed = false;
 
 // register new user
 if (answer.action === "register") {
@@ -92,7 +93,7 @@ if (answer.action === "register") {
       ],
     });
 
-    let isConfirmed = false;
+
     while (!isConfirmed) {
       // prompt for confirmation code
       const confirmAnswer = await inquirer.prompt([
@@ -120,7 +121,7 @@ if (answer.action === "register") {
 }
 
 // login
-if (answer.action === "login") {
+if (answer.action === "login" || isConfirmed) {
   try {
     const response = await client.initiateAuth({
       AuthFlow: "USER_PASSWORD_AUTH",

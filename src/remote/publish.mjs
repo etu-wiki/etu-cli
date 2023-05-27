@@ -2,6 +2,8 @@ import { program } from "commander";
 import path from "path";
 import fs from "fs";
 import os from "os";
+import bytes from "bytes";
+import getFolderSize from "get-folder-size";
 import {
   cwd,
   __dirname,
@@ -11,7 +13,7 @@ import {
   warning,
   underline,
   getIIIFVersion,
-  getImageAPIVersion
+  getImageAPIVersion,
 } from "../utils/common.mjs";
 import pLimit from "p-limit";
 import mime from "mime-types";
@@ -19,17 +21,22 @@ import mime from "mime-types";
 import { Upload } from "@aws-sdk/lib-storage";
 import { S3 } from "@aws-sdk/client-s3";
 import { CognitoIdentity } from "@aws-sdk/client-cognito-identity";
-
 import { CognitoIdentityProvider } from "@aws-sdk/client-cognito-identity-provider";
 
 import {
+  MAX_CONCURRENT,
   COGNITO_CLIENT_ID,
   AWS_REGION,
   IDENTITY_POOL_ID,
   USER_POOL_ID,
   UPLOAD_BUCKET,
+  TENANT_TABLE,
 } from "../config.mjs";
 import yaml from "js-yaml";
+
+import { DynamoDB } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
+
 
 const credPath = path.join(os.homedir(), ".etu", ".credentials");
 if (!fs.existsSync(credPath)) {
@@ -92,18 +99,22 @@ const { Credentials } = await cognitoClient.getCredentialsForIdentity({
   Logins: logins,
 });
 
-const client = new S3({
+const stsCredentials = {
   region: AWS_REGION,
   credentials: {
     accessKeyId: Credentials.AccessKeyId,
     secretAccessKey: Credentials.SecretKey,
     sessionToken: Credentials.SessionToken,
   },
-});
+}
 
-const MAX_CONCURRENT = 800;
+const client = new S3(stsCredentials);
 
-const description = `Publish local ETU project to Internet
+const dbclient = new DynamoDB(stsCredentials);
+
+const ddbDocClient = DynamoDBDocument.from(dbclient);
+
+const description = `Publish your Images to ETU IIIF server
 
     Example:
         $ etu publish`;
@@ -141,18 +152,70 @@ console.time("upload time");
 
 // limit file handlers
 const limit = pLimit(MAX_CONCURRENT);
-console.log("Uploading images");
 
 // userId is used to isolate different users' data
-const userId = credentials.user.id;
+const tenantId = credentials.user.id;
 
+// check tenant storage quota
+// get tenant data from dynamodb
+const res = await ddbDocClient.get({
+  TableName: TENANT_TABLE,
+  Key: {
+    tenant_id: tenantId,
+  },
+});
+const tenant = res.Item;
+
+
+// const tenantData = await ddbDocClient.query({
+//   TableName: TENANT_TABLE,
+//   KeyConditionExpression: "tenant_id = :tenant_id",
+//   ExpressionAttributeValues: {
+//     ":tenant_id": tenantId,
+//   },
+// });
+// const tenant = tenantData.Items[0];
+// console.log(tenant);
+const usage = Math.round(
+  (tenant.compress_size_sum / tenant.storage_quota) * 100
+);
+
+const message = `You have used ${bytes(
+  tenant.compress_size_sum
+)} (${usage}%) of total ${bytes(tenant.storage_quota)} storage quota.`;
+if (usage < 90) {
+  console.log(info(message));
+} else if (usage < 100) {
+  console.log(warning(message));
+} else {
+  console.log(
+    error(
+      `Your storage quota (${bytes(tenant.storage_quota)}) has been exceeded.`
+    )
+  );
+  process.exit(1);
+}
+
+const imageFolderSize = await getFolderSize(
+  path.join(process.cwd(), "asset", "i")
+);
+
+if (tenant.compress_size_sum + imageFolderSize.size > tenant.storage_quota) {
+  console.log(
+    info("Your current project size is " + bytes(imageFolderSize.size))
+  );
+  console.log(error("Your storage quota will be exceeded if published."));
+  process.exit(1);
+}
+
+console.log(info("Start uploading images"));
 await Promise.all(
   images.map((item) =>
     limit(() => {
       // upload data to S3
       const params = {
         Bucket: UPLOAD_BUCKET,
-        Key: userId + "/" + item.image_id + path.extname(item.filename),
+        Key: tenantId + "/" + item.image_id + path.extname(item.filename),
         Body: fs.createReadStream(item.filepath),
         ContentType: mime.lookup(path.extname(item.filename)).toString(),
         StorageClass: "INTELLIGENT_TIERING",
@@ -188,7 +251,6 @@ await Promise.all(
     })
   )
 );
-
 console.timeEnd("upload time");
 
 etuYaml.isPublished = true;
