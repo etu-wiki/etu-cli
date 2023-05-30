@@ -19,11 +19,34 @@ export const pkg = JSON.parse(
 export const cwd = process.cwd();
 
 import chalk from "chalk";
+import jwt from "jsonwebtoken";
+
 export const warning = (message) => `${chalk.yellow("WARNING:")} ${message}`;
 export const info = (message) => `${chalk.green("INFO:")} ${message}`;
 export const error = (message) => `${chalk.red("ERROR:")} ${message}`;
 export const bold = (message) => `${chalk.bold(message)}`;
 export const underline = (message) => `${chalk.underline(message)}`;
+
+export function isSTSCredentialsExpired(credentials) {
+  const expirationTime = credentials.Expiration;
+  const currentTime = new Date();
+
+  return expirationTime < currentTime;
+}
+
+export function isIdTokenExpired(idToken) {
+  try {
+    const decodedToken = jwt.decode(idToken, { complete: true });
+    const expirationTime = decodedToken.payload.exp;
+    const currentTime = Math.floor(Date.now() / 1000);
+
+    return expirationTime < currentTime;
+  } catch (error) {
+    // Handle token decoding or verification errors
+    console.error('Error decoding or verifying ID token:', error);
+    return false;
+  }
+}
 
 export function getVersion() {
   const data = [

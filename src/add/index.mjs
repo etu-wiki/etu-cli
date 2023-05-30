@@ -22,13 +22,13 @@ import { WIDTH_SCALE, THUMB_DIM_THRESHOLD, HD_DIM_THRESHOLD, TILE_DIM } from "..
 
 const start = Date.now();
 
-const description = `Import images from local path.
+const description = `Add images from local path.
 
     Example:
-        $ etu import`;
+        $ etu add`;
 
 program
-  .name("etu import")
+  .name("etu add")
   .helpOption("-h, --help", "Display help for command")
   .description(description)
   .addHelpCommand(false)
@@ -84,7 +84,7 @@ async function expandPath(image, rootPath) {
       // valid image file
       const fileInfo = {};
       if (meta && meta.height && meta.width) {
-        console.log(info(`Importing ${sourceFile}`));
+        console.log(info(`Adding ${sourceFile}`));
 
         // adjust orientation if necessary
         if (meta.orientation >= 5) {
@@ -189,7 +189,8 @@ async function expandPath(image, rootPath) {
   image.files = fileInfoList;
 }
 
-// install images
+// add images
+
 for (const image of etuYaml.images) {
   if (!image.files) {
     await expandPath(image, path.join(image.path, ".."));

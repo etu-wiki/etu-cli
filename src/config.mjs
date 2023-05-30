@@ -1,6 +1,6 @@
-export const USER_POOL_ID = "us-east-1_ravL9jHd9"
-export const IDENTITY_POOL_ID = "us-east-1:d2226afc-bc90-496a-aafa-dff82d5a2d98"
-export const COGNITO_CLIENT_ID = "3ci8c8c729sg8rbvnhj1ba5efh"
+export const USER_POOL_ID = "us-east-1_F8s1XSmEI"
+export const IDENTITY_POOL_ID = "us-east-1:fe5bb563-922e-42ae-967f-b0e85c746dcd"
+export const COGNITO_CLIENT_ID = "3ncr7se90lmnes2m73hbmrrvs6"
 export const UPLOAD_BUCKET = "devgl-upload"
 export const TENANT_TABLE = "devgl-tenant"
 export const IMAGE_API_ENDPOINT = 'https://devgl.image.fiii.cc/image'

@@ -1,15 +1,17 @@
 import fs from "fs";
 import os from "os";
 import path from "path";
+import { CognitoIdentity } from "@aws-sdk/client-cognito-identity";
 import { CognitoIdentityProvider } from "@aws-sdk/client-cognito-identity-provider";
 import inquirer from "inquirer";
 import yaml from "js-yaml";
 import jwt from "jsonwebtoken";
 
-import { COGNITO_CLIENT_ID, AWS_REGION } from "../config.mjs";
+import { COGNITO_CLIENT_ID, USER_POOL_ID, IDENTITY_POOL_ID, AWS_REGION } from "../config.mjs";
 
 // Configure AWS Cognito
 const client = new CognitoIdentityProvider({ region: AWS_REGION });
+const cognitoClient = new CognitoIdentity({ region: AWS_REGION });
 
 // prompt user to enter username and password or register new user or confirm registration
 const answer = await inquirer.prompt([
@@ -134,6 +136,22 @@ if (answer.action === "login" || isConfirmed) {
     const idToken = response.AuthenticationResult.IdToken;
     const jwtId = jwt.decode(idToken);
 
+    // Get the identity ID using the access token
+    const userPoolEndpoint = `cognito-idp.${AWS_REGION}.amazonaws.com/${USER_POOL_ID}`;
+    const logins = {};
+    logins[userPoolEndpoint] = idToken;
+
+    const { IdentityId } = await cognitoClient.getId({
+      IdentityPoolId: IDENTITY_POOL_ID,
+      Logins: logins,
+    });
+
+    // // Get the temporary credentials using the identity ID
+    const { Credentials } = await cognitoClient.getCredentialsForIdentity({
+      IdentityId,
+      Logins: logins,
+    });
+
     fs.mkdirSync(path.join(os.homedir(), ".etu"), { recursive: true });
     fs.writeFileSync(
       path.join(os.homedir(), ".etu", ".credentials"),
@@ -145,7 +163,7 @@ if (answer.action === "login" || isConfirmed) {
           username: answer.username,
         },
         token: response.AuthenticationResult,
-        iss: jwtId.iss,
+        sts: Credentials,
       })
     );
 
