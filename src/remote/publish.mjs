@@ -12,7 +12,6 @@ import {
   bold,
   warning,
   underline,
-  getIIIFVersion,
   getImageAPIVersion,
   isSTSCredentialsExpired,
 } from "../utils/common.mjs";
@@ -122,6 +121,8 @@ const ddbDocClient = DynamoDBDocument.from(dbclient);
 
 const description = `Publish your Images to ETU IIIF server
 
+Use \`etu status\` afterwards to check publishing status
+
     Example:
         $ etu publish`;
 
@@ -143,8 +144,8 @@ for (let imagePath of etuYaml.images) {
     const fileFullPath = path.join(imagePath.path, file.filename);
     item.filepath = fileFullPath;
     item.label = imagePath.label + " " + file.label;
-    item.iiifversion = getIIIFVersion(etuYaml.viewer);
-    item.imageapiversion = getImageAPIVersion(etuYaml.viewer);
+    item.iiifversion = etuYaml.iiifVersion;
+    item.imageapiversion = getImageAPIVersion(etuYaml.iiifVersion);
     images.push(item);
   }
 }
@@ -205,7 +206,7 @@ if (usage < 90) {
 }
 
 const imageFolderSize = await getFolderSize(
-  path.join(process.cwd(), "asset", "i")
+  path.join(process.cwd(), "public", "i")
 );
 
 if (tenant.compress_size_sum + imageFolderSize.size > tenant.storage_quota) {
@@ -245,7 +246,7 @@ await Promise.all(
           (progress.loaded / progress.total) * 100
         );
         if (progressPercentage >= 100) {
-          console.log("✅[100%]  " + item.filepath + "(" + item.image_id + ")");
+          console.log("✅[100%]  " + item.filepath);
         } else {
           console.log(
             "⏩[" +

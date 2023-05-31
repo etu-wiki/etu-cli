@@ -1,9 +1,12 @@
 {
   "name": "etu-cli",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "command line tool to lanch iiif in localhost",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "keywords": [
     "etu",
@@ -34,8 +37,13 @@
     "@aws-sdk/client-sts": "^3.335.0",
     "@aws-sdk/lib-dynamodb": "^3.338.0",
     "@aws-sdk/lib-storage": "^3.332.0",
-    "@etu-wiki/iiif-image-shims": "^0.0.3",
-    "@etu-wiki/sharp-iiif-shims": "^0.0.37",
+    "@emotion/react": "^11.11.0",
+    "@emotion/styled": "^11.11.0",
+    "@etu-wiki/iiif-image-shims": "^0.0.14",
+    "@etu-wiki/sharp-iiif-shims": "^0.0.45",
+    "@mui/icons-material": "^5.11.16",
+    "@mui/material": "^5.13.3",
+    "@samvera/clover-iiif": "^1.15.0",
     "arg": "^5.0.1",
     "axios": "^1.4.0",
     "bytes": "^3.1.2",
@@ -53,6 +61,7 @@
     "md5": "^2.3.0",
     "md5-file": "^5.0.0",
     "mustache": "^4.2.0",
+    "next": "^13.4.4",
     "open": "^8.4.0",
     "open-in-editor": "^2.2.0",
     "ora": "^6.1.0",
@@ -61,5 +70,13 @@
     "sharp": "^0.32.1",
     "tar": "^6.1.11",
     "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.2.5",
+    "@types/react": "^18.2.7"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   }
 }

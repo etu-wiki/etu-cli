@@ -5,7 +5,8 @@ import path from "path";
 const system_command = program
     .helpOption('-h, --help', `Display help for command.`)
     .command('init', `${emoji('👍')} Initialize a ETU project.`, { executableFile: path.join(__dirname, 'src/init/index.mjs') })
-    .command('add', `${emoji('🖼')}  Add images from local path.`, { executableFile: path.join(__dirname, 'src/add/index.mjs') })
+    .command('import', `${emoji('🖼')}  Import images from local path.`, { executableFile: path.join(__dirname, 'src/import/index.mjs') })
+    .command('clean', `${emoji('🫧')} Remove derivative images from importing.`, { executableFile: path.join(__dirname, 'src/clean/index.mjs') })
     .command('run', `${emoji('🚀')} Run your local IIIF server.`, { executableFile: path.join(__dirname, 'src/run/index.mjs') })
     .command('login', `${emoji('👤')} Login your ETU account.`, { executableFile: path.join(__dirname, 'src/account/login.mjs') })
     .command('logout', `${emoji('⏏')}  Logout your ETU account.`, { executableFile: path.join(__dirname, 'src/account/logout.mjs') })

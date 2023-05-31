@@ -18,10 +18,14 @@
 * support mirador 2
 * fix thumbnail issue
 
-## [v0.1.8] - 
+## [v0.3.0] - 2023-06-10
+ETU Pro
 
 * change typescript to mjs
-* expand more than one level image folder
+* accept more than one level image folder
 * add size threshold to prevent jpeg size overflow
 * remove ipfs for security reason
 * auto rotate thumbnail image
+* publish image to a serverless IIIF image server
+* support cloverIIIF
+* redesign local UI in nextjs

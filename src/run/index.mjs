@@ -27,7 +27,7 @@ program
     "Specify a port on which to listen",
     "3000"
   )
-  .option("--cors", "Enable CORS, sets `Access-Control-Allow-Origin` to `*`")
+  // .option("--cors", "Enable CORS, sets `Access-Control-Allow-Origin` to `*`")
   .option(
     "--ssl-cert <file path>",
     "Path to an SSL/TLS certificate's public key"
@@ -37,8 +37,6 @@ program
     "Path to the SSL/TLS certificate's private key"
   )
   .option("-m, --modify-manifest", "Edit manifest in your favorite editor")
-  .option("-V, --modify-viewer", "Edit viewer setting in your favorite editor")
-  .option("--remote", "Run image server on etu.wiki")
   .option("--cookbook", "Run IIIF cookbook recipe in ETU")
   .helpOption("-h, --help", "Display help for command")
   .description(description)
@@ -47,7 +45,7 @@ program
 
 const options = program.opts();
 
-if (options.modifyManifest || options.modifyViewer) {
+if (options.modifyManifest) {
   const answer = await inquirer.prompt([
     {
       type: "list",
@@ -136,6 +134,7 @@ if (options.cookbook) {
 
   etuYaml = {
     viewer: answer.viewer,
+    iiifVersion: '3',
     images: [{ presentUuid: answer.cookbook }],
   };
 
@@ -143,15 +142,16 @@ if (options.cookbook) {
 
   registerShutdown(() => {
     fs.rmSync(ETU_PATH, { recursive: true, force: true });
+    fs.unlinkSync(path.join(__dirname, 'public'));
   });
 } else {
-  ETU_PATH = path.join(cwd, "asset");
+  ETU_PATH = path.join(cwd, "public");
   const etuLockYaml = path.join(cwd, "etu-lock.yaml");
 
   // etu-lock.yaml has to be existed before
   if (!fs.existsSync(etuLockYaml)) {
     console.log(
-      error(`No etu-lock.yaml found in ${cwd}  Please run 'etu install' first.`)
+      error(`No etu-lock.yaml found in ${cwd}  Please run 'etu import' first.`)
     );
     process.exit(1);
   }
@@ -159,15 +159,12 @@ if (options.cookbook) {
   etuYaml = yaml.load(fs.readFileSync(etuLockYaml).toString());
 
   // when run in remote, the project has to be published before
-  if (!etuYaml.isPublished && options.remote) {
+  if (!etuYaml.isPublished && etuYaml.isRemote) {
     console.log(
-      error(`The ETU project can not run because it has not been published before.`)
+      error(`The ETU project can not run in remote mode because it has not been published before.`)
     );
     process.exit(1);
   }
-
-
-
 
   run(ETU_PATH, options, etuYaml);
 }

@@ -12,8 +12,6 @@ import {
   bold,
   warning,
   underline,
-  getIIIFVersion,
-  getImageAPIVersion,
   isIdTokenExpired,
 } from "../utils/common.mjs";
 import pLimit from "p-limit";
@@ -26,6 +24,7 @@ import {
   COGNITO_CLIENT_ID,
   AWS_REGION,
   ADMIN_API_ENDPOINT,
+  IMAGE_API_ENDPOINT
 } from "../config.mjs";
 import yaml from "js-yaml";
 
@@ -98,8 +97,6 @@ for (let imagePath of etuYaml.images) {
     const fileFullPath = path.join(imagePath.path, file.filename);
     item.filepath = fileFullPath;
     item.label = imagePath.label + " " + file.label;
-    item.iiifversion = getIIIFVersion(etuYaml.viewer);
-    item.imageapiversion = getImageAPIVersion(etuYaml.viewer);
     images.push(item);
   }
 }
@@ -110,6 +107,7 @@ console.time("check status time");
 const limit = pLimit(MAX_CONCURRENT);
 
 console.log(info("Start checking compression status"));
+const messages = []
 await Promise.all(
   images.map((item) =>
     limit(() => {
@@ -125,12 +123,15 @@ await Promise.all(
           let emoji;
           if (data.data.status === "SUCCEEDED") {
             emoji = "✅";
+            console.log(`${emoji} ${data.data.status}:  ` + item.filepath );
+            console.log(info("thumbnail url: " + `${IMAGE_API_ENDPOINT}/${item.image_id}/full/400,/0/default.${etuYaml.format}\n`))
           } else if (data.data.status === "FAILED") {
             emoji = "❌";
+            messages.push(`${emoji} ${data.data.status}:  ` + item.filepath);
           } else {
             emoji = "⏳";
+            messages.push(`${emoji} ${data.data.status}:  ` + item.filepath);
           }
-          console.log(`${emoji} ${data.data.status}:  ` + item.filepath);
         })
         .catch((error) => {
           console.log(error);
@@ -138,7 +139,7 @@ await Promise.all(
     })
   )
 );
+console.log(messages.join("\n"));
 console.timeEnd("check status time");
 
-delete etuYaml.isPublished;
 fs.writeFileSync(`${cwd}/etu-lock.yaml`, yaml.dump(etuYaml));

@@ -1,30 +1,24 @@
 import fs from "fs";
 import path from "path";
+import next from "next";
 
 import handler from "serve-handler";
 import yaml from "js-yaml";
-
-import compression from "compression";
-import { promisify } from "util";
-const compressionHandler = promisify(compression());
-
-import { IMAGE_API_ENDPOINT } from "../config.mjs";
 
 import open from "open";
 
 import {
   cwd,
   __dirname,
-  generateManifest,
   patchViewer,
-  getIIIFVersion,
-  getViewerName,
+  generateManifest,
   registerShutdown,
   info,
   error,
   bold,
   warning,
   underline,
+  staticBuild,
 } from "../utils/common.mjs";
 import { createServer as createHttpServer } from "http";
 import { createServer as createSecureHttpSever } from "https";
@@ -44,186 +38,178 @@ import { createServer as createSecureHttpSever } from "https";
 
 import openInEditor from "open-in-editor";
 import livereload from "livereload";
+import serveHandler from "serve-handler";
 
 const start = Date.now();
 
-function generateCookbookManifest(rootPath, etuYaml) {
+function handleCookbook(rootPath, etuYaml) {
   const presentUuid = etuYaml.images[0].presentUuid;
   const cookbookPath = path.join(__dirname, "cookbook", presentUuid);
+  // console.log("rootPath: " + rootPath);
+  // console.log("cookbookPath: " + cookbookPath);
 
-  if (!fs.existsSync(rootPath)) {
-    const res = fs.mkdirSync(rootPath, { recursive: true });
-    console.log(res);
-    fs.cpSync(path.join(__dirname, "viewer", etuYaml.viewer), rootPath, {
-      recursive: true,
-    });
-  }
-
-  fs.mkdirSync(path.join(rootPath, "p", "3", presentUuid), { recursive: true });
+  fs.mkdirSync(path.join(rootPath, "p", presentUuid), { recursive: true });
   fs.copyFileSync(
     path.join(cookbookPath, "manifest.json"),
-    path.join(rootPath, "p", "3", presentUuid, "manifest.json")
+    path.join(rootPath, "p", presentUuid, "manifest.json")
   );
 
-  console.log(info(`Patching viewer settings`));
-  const indexPath = path.join(rootPath, "index.html");
+  fs.cpSync(path.join(__dirname, "viewer", etuYaml.viewer), rootPath, {
+    recursive: true,
+  });
 
-  patchViewer(indexPath, [presentUuid], [], etuYaml.viewer);
+  fs.writeFileSync(
+    path.join(rootPath, "etu.json"),
+    JSON.stringify({ iiifVersion: "3", images: [] })
+  );
+  console.log(info(`Patching viewer settings`));
+
+  patchViewer(rootPath, [presentUuid], etuYaml.viewer);
+
+  const sharedPublicPath = path.join(__dirname, "public");
+  if (fs.existsSync(sharedPublicPath)) {
+    fs.unlinkSync(sharedPublicPath);
+  }
+  fs.symlinkSync(rootPath, sharedPublicPath);
 }
 
 export function run(rootPath, options, etuYaml) {
-  const iiifVersion = getIIIFVersion(etuYaml.viewer);
+  // let baseUrl = "http://localhost:3000";
 
-  const severHandler = async (request, response) => {
-    const config = {};
+  // etuYaml with name is etu project and should generate manifest and index.html
+  if (options.cookbook) {
+    handleCookbook(rootPath, etuYaml);
+  }
 
-    config.public = rootPath;
+  staticBuild();
 
-    // to disploy thumbnail for etu project
-    config.redirects = [
-      {
-        source: `/i/${iiifVersion}/:id/full/:width/0/default.${etuYaml.format}`,
-        destination: `/i/${iiifVersion}/:id/thumbnail.${etuYaml.format}`,
-      },
-    ];
+  const app = next({ dev: false, dir: __dirname });
+  const severHandler = app.getRequestHandler();
 
-    // set CORS headers
-    if (options.cors) {
-      response.setHeader("Access-Control-Allow-Origin", "*");
-    }
-    // compress response
-    await compressionHandler(request, response);
+  app.prepare().then(() => {
+    // const severHandler = async (request, response) => {
+    //   // set CORS headers
+    //   if (options.cors) {
+    //     response.setHeader("Access-Control-Allow-Origin", "*");
+    //   }
 
-    return handler(request, response, config);
-  };
 
-  const httpMode = options.sslCert && options.sslKey ? "https" : "http";
-  const server =
-    httpMode === "https"
-      ? createSecureHttpSever(
-          {
-            key: fs.readFileSync(options.sslKey),
-            cert: fs.readFileSync(options.sslCert),
-          },
-          severHandler
-        )
-      : createHttpServer(severHandler);
+    //   return handler(request, response);
+    // };
 
-  server.on("error", (err) => {
-    if (err.code === "EADDRINUSE" && options.port)
-      console.error(error(`Failed to etu: ${err.stack}`));
-    process.exit(1);
-  });
+    const httpMode = options.sslCert && options.sslKey ? "https" : "http";
+    const server =
+      httpMode === "https"
+        ? createSecureHttpSever(
+            {
+              key: fs.readFileSync(options.sslKey),
+              cert: fs.readFileSync(options.sslCert),
+            },
+            severHandler
+          )
+        : createHttpServer(severHandler);
 
-  server.listen(options.port, async () => {
-    const details = server.address();
+    server.on("error", (err) => {
+      if (err.code === "EADDRINUSE" && options.port)
+        console.error(error(`Failed to etu: ${err.stack}`));
+      process.exit(1);
+    });
 
-    registerShutdown(() => server.close());
+    server.listen(options.port, async () => {
+      const details = server.address();
 
-    let localAddress = null;
-    // let networkAddress = null;
+      registerShutdown(() => server.close());
 
-    if (typeof details === "string") {
-      localAddress = details;
-    } else if (typeof details === "object" && details.port) {
-      const address = details.address === "::" ? "localhost" : details.address;
-      // const ip = getNetworkAddress();
+      let localAddress = null;
+      // let networkAddress = null;
 
-      localAddress = `${httpMode}://${address}:${details.port}`;
-      // networkAddress = ip ? `${httpMode}://${ip}:${details.port}` : null;
-    }
+      if (typeof details === "string") {
+        localAddress = details;
+      } else if (typeof details === "object" && details.port) {
+        const address =
+          details.address === "::" ? "localhost" : details.address;
+        // const ip = getNetworkAddress();
 
-    console.log(info(`Accepting connections on ${localAddress}`));
-
-    const baseUrl = `${httpMode}://localhost:${details.port}`;
-    let url = `${baseUrl}/index.html`;
-
-    const stop = Date.now();
-    if (process.stdout.isTTY && process.env.NODE_ENV !== "production") {
-      let message = info("IIIF for your OWN!\n");
-      message += `\n${bold("- Time Cost:   ")}  ${
-        (stop - start) / 1000
-      } seconds`;
-      message += `\n${bold("- IIIF Viewer: ")}  ${getViewerName(
-        etuYaml.viewer
-      )}`;
-      message += `\n${bold("- IIIF Version:")}  ${iiifVersion}`;
-      message += `\n${bold("- Viewer Url:  ")}  ${url}`;
-      message += "\n";
-      if (parseInt(options.port) !== details.port) {
-        message += warning(
-          `This port was picked because ${underline(options.port)} is in use.`
-        );
+        localAddress = `${httpMode}://${address}:${details.port}`;
+        // networkAddress = ip ? `${httpMode}://${ip}:${details.port}` : null;
       }
-      console.log(message);
-    } else {
-      const suffix = localAddress ? ` at ${localAddress}` : "";
-      console.log(info(`Accepting connections${suffix}`));
-    }
 
-    // etuYaml with name is etu project and should generate manifest and index.html
-    if (options.cookbook) {
-      generateCookbookManifest(rootPath, etuYaml);
-    } else {
-      let imageBaseUrl
-      if(options.remote) {
-        imageBaseUrl = IMAGE_API_ENDPOINT;
-      } else {
-        imageBaseUrl = baseUrl + '/i/' + getIIIFVersion(etuYaml.viewer);
-      }
-      if (baseUrl !== etuYaml.presentBaseUrl || imageBaseUrl !== etuYaml.imageBaseUrl) {
+      // regenerate manifest and etu-lock.yaml when localAddress changed
+      if (localAddress !== "http://localhost:3000" && !options.cookbook) {
+        if (etuYaml.isRemote) {
+          etuYaml.imageBaseUrl = IMAGE_API_ENDPOINT;
+        } else {
+          etuYaml.imageBaseUrl = localAddress + "/i/";
+        }
+
         console.log(info(`Generating Manifests`));
-        etuYaml.presentBaseUrl = baseUrl + '/p/' + getIIIFVersion(etuYaml.viewer);
-        etuYaml.imageBaseUrl = imageBaseUrl
-
-        generateManifest(rootPath, etuYaml, options.remote);
-
+        etuYaml.presentBaseUrl = localAddress + "/p/";
+        generateManifest(etuYaml);
         fs.writeFileSync(`${cwd}/etu-lock.yaml`, yaml.dump(etuYaml));
-      }
-    }
 
-    open(url);
-
-    if (options.modifyManifest) {
-      const editor = openInEditor.configure({
-        editor: options.editor,
-      });
-      etuYaml.images.forEach(async (e) => {
-        await editor.open(
-          path.join(rootPath, `p/${iiifVersion}/${e.presentUuid}/manifest.json`)
+        // convert etuYaml to json and save to etu.json under public folder
+        fs.writeFileSync(
+          `${cwd}/public/etu.json`,
+          JSON.stringify(etuYaml, null, 2)
         );
+      }
+
+      const stop = Date.now();
+
+      if (process.stdout.isTTY && process.env.NODE_ENV !== "production") {
+        let message = info(`ETU -- Accepting connections on ${localAddress}\n`);
+        message += `\n${bold("- Startup Time:")}  ${
+          (stop - start) / 1000
+        } seconds`;
+        message += `\n${bold("- IIIF Version:")}  ${etuYaml.iiifVersion}`;
+        message += "\n";
+        if (parseInt(options.port) !== details.port) {
+          message += warning(
+            `This port was picked because ${underline(options.port)} is in use.`
+          );
+        }
+        console.log(message);
+      } else {
+        const suffix = localAddress ? ` at ${localAddress}` : "";
+        console.log(info(`Accepting connections${suffix}`));
+      }
+
+      // etuYaml with name is etu project and should generate manifest and index.html
+      if (options.cookbook) {
+        open(localAddress + `/${etuYaml.viewer}.html`);
+      } else {
+        open(localAddress);
+      }
+
+      if (options.modifyManifest) {
+        const editor = openInEditor.configure({
+          editor: options.editor,
+        });
+        etuYaml.images.forEach(async (e) => {
+          await editor.open(
+            path.join(rootPath, `p/${e.presentUuid}/manifest.json`)
+          );
+        });
+        console.log(
+          info(
+            "If you can't see your change in the viewer, please reload the page"
+          ) + "\n"
+        );
+
+        const lrserver = livereload.createServer({ exts: ["json"] });
+        lrserver.watch(rootPath);
+      }
+
+      console.log("\n" + info("Press ^C at any time to quit."));
+    });
+
+    registerShutdown(() => {
+      console.log(`\n${info("Gracefully shutting down. Please wait...")}`);
+
+      process.on("SIGINT", () => {
+        console.log(`\n${warning("Force-closing all open sockets...")}`);
+        process.exit(0);
       });
-      console.log(
-        info(
-          "If you can't see your change in the viewer, please reload the page"
-        ) + "\n"
-      );
-
-      const lrserver = livereload.createServer({ exts: ["json"] });
-      lrserver.watch(rootPath);
-    }
-
-    if (options.modifyViewer) {
-      const editor = openInEditor.configure({
-        editor: options.editor,
-      });
-      await editor.open(path.join(rootPath, "index.html"));
-      console.log(
-        info(
-          "After editing viewer settings, please reload the page to see the changes."
-        ) + "\n"
-      );
-    }
-
-    console.log("\n" + info("Press ^C at any time to quit."));
-  });
-
-  registerShutdown(() => {
-    console.log(`\n${info("Gracefully shutting down. Please wait...")}`);
-
-    process.on("SIGINT", () => {
-      console.log(`\n${warning("Force-closing all open sockets...")}`);
-      process.exit(0);
     });
   });
 }

@@ -1,9 +1,9 @@
 import { program } from "commander";
+import inquirer from "inquirer";
 import path from "path";
 import fs from "fs";
 import os from "os";
 import axios from "axios";
-import bytes from "bytes";
 import {
   cwd,
   __dirname,
@@ -12,13 +12,10 @@ import {
   bold,
   warning,
   underline,
-  getIIIFVersion,
-  getImageAPIVersion,
   isIdTokenExpired,
 } from "../utils/common.mjs";
 import pLimit from "p-limit";
 
-import { CognitoIdentity } from "@aws-sdk/client-cognito-identity";
 import { CognitoIdentityProvider } from "@aws-sdk/client-cognito-identity-provider";
 
 import {
@@ -80,7 +77,14 @@ const description = `Delete your Images to recover ETU IIIF server storage
     Example:
         $ etu publish`;
 
-program.name("etu publish").description(description);
+program
+  .name("etu delete")
+  .option("-y", "skip confirmation")
+  .helpOption("-h, --help", "Display help for command")
+  .description(description)
+  .addHelpCommand(false)
+  .parse(process.argv);
+const options = program.opts();
 
 const etuLockYamlPath = path.join(cwd, "etu-lock.yaml");
 if (!fs.existsSync(etuLockYamlPath)) {
@@ -90,45 +94,62 @@ if (!fs.existsSync(etuLockYamlPath)) {
   process.exit(1);
 }
 
-let images = [];
-const etuYaml = yaml.load(fs.readFileSync(etuLockYamlPath).toString());
-for (let imagePath of etuYaml.images) {
-  for (let file of imagePath.files) {
-    const item = JSON.parse(JSON.stringify(file));
-    const fileFullPath = path.join(imagePath.path, file.filename);
-    item.filepath = fileFullPath;
-    item.label = imagePath.label + " " + file.label;
-    item.iiifversion = getIIIFVersion(etuYaml.viewer);
-    item.imageapiversion = getImageAPIVersion(etuYaml.viewer);
-    images.push(item);
-  }
+// prompt the user to confirm whether to delete all published images
+let isContinue;
+if (options.y) {
+  isContinue = { continue: true };
+} else {
+  isContinue = await inquirer.prompt([
+    {
+      type: "confirm",
+      name: "continue",
+      default: false,
+      message: "Are you sure to remove all published images from cloud?:",
+    },
+  ]);
 }
 
-console.time("delete time");
+if (isContinue.continue) {
+  let images = [];
+  const etuYaml = yaml.load(fs.readFileSync(etuLockYamlPath).toString());
+  for (let imagePath of etuYaml.images) {
+    for (let file of imagePath.files) {
+      const item = JSON.parse(JSON.stringify(file));
+      const fileFullPath = path.join(imagePath.path, file.filename);
+      item.filepath = fileFullPath;
+      item.label = imagePath.label + " " + file.label;
+      images.push(item);
+    }
+  }
+  console.time("delete time");
 
-// limit file handlers
-const limit = pLimit(MAX_CONCURRENT);
+  // limit file handlers
+  const limit = pLimit(MAX_CONCURRENT);
 
-console.log(info("Start delete images"));
-await Promise.all(
-  images.map((item) =>
-    limit(() => {
-      // use axios to call rest api in delete method to delete image
-      const url = `${ADMIN_API_ENDPOINT}/image/${item.image_id}`;
-      const config = {
-        headers: {
-          Authorization: `${idToken}`,
-        },
-      };
-      return axios.delete(url, config).then(() => {
-        console.log("✅ deleted:  " + item.filepath);
-      }).catch((error) => {
-        console.log(error);
-      });
-    })
-  )
-);
-console.timeEnd("delete time");
+  console.log(info("Start deleting images"));
+  await Promise.all(
+    images.map((item) =>
+      limit(() => {
+        // use axios to call rest api in delete method to delete image
+        const url = `${ADMIN_API_ENDPOINT}/image/${item.image_id}`;
+        const config = {
+          headers: {
+            Authorization: `${idToken}`,
+          },
+        };
+        return axios
+          .delete(url, config)
+          .then(() => {
+            console.log("✅ deleted:  " + item.filepath);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      })
+    )
+  );
+  console.timeEnd("delete time");
 
-delete etuYaml.isPublished;
-fs.writeFileSync(`${cwd}/etu-lock.yaml`, yaml.dump(etuYaml));
+  delete etuYaml.isPublished;
+  fs.writeFileSync(`${cwd}/etu-lock.yaml`, yaml.dump(etuYaml));
+}

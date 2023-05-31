@@ -14,7 +14,7 @@ const description = `Initialize a new project
 const INIT_PROMPT = `This init process will walk you through creating a etu.yaml file.
 It is a property file that is critical to construct ETU project.
 
-Use \`etu install\` afterwards to install iiif assets under the initialized folder
+Use \`etu import\` afterwards to import iiif public under the initialized folder
 
 Press ^C at any time to quit.
 `;
@@ -37,32 +37,39 @@ if (fs.readdirSync(process.cwd()).length > 0) {
 }
 console.log(INIT_PROMPT);
 
-const answer = {};
 const q1q2 = await inquirer.prompt([
   {
     type: "input",
     name: "name",
-    message: "What is the name of your ETU project?(1/4)",
+    message: "project name:",
     default: path.basename(process.cwd()),
     validate(input) {
       return input.length > 0 ? true : "You must provide a project name";
     },
   },
   {
+    type: "input",
+    name: "author",
+    message: "author:"
+  },
+  {
+    type: "input",
+    name: "license",
+    message: "license:",
+  },
+  {
     type: "list",
-    name: "viewer",
-    message: "Which viewer would you like to use?(2/4)",
+    name: "iiifVersion",
+    message: "iiif version:",
+    default: "3",
     choices: [
-      { name: "Mirador 3 (iiif 3)", value: "m3" },
-      { name: "Universal Viewer 4 (iiif 2)", value: "u4" },
-      { name: "Mirador 2 (iiif 2)", value: "m2" },
-      { name: "Universal Viewer 3 (iiif 2)", value: "u3" }
+      { name: "v3", value: "3" },
+      { name: "v2", value: "2" }
     ],
   },
 ]);
 
-answer.name = q1q2.name;
-answer.viewer = q1q2.viewer;
+const answer = { ...q1q2 };
 
 const images = [];
 let isContinue;
@@ -71,7 +78,7 @@ do {
     {
       type: "input",
       name: "path",
-      message: "What is the path of your source image(s)?(3/4)\n",
+      message: "image path:",
       validate(input) {
         return existsSync(input) ? true : "You must provide a valid path";
       },
@@ -82,7 +89,8 @@ do {
     {
       type: "confirm",
       name: "continue",
-      message: "Do you want to add another image path?",
+      default: false,
+      message: "another image path:",
     },
   ]);
 } while (isContinue.continue);

@@ -21,11 +21,35 @@ export const cwd = process.cwd();
 import chalk from "chalk";
 import jwt from "jsonwebtoken";
 
+import { execSync } from "child_process";
+
 export const warning = (message) => `${chalk.yellow("WARNING:")} ${message}`;
 export const info = (message) => `${chalk.green("INFO:")} ${message}`;
 export const error = (message) => `${chalk.red("ERROR:")} ${message}`;
 export const bold = (message) => `${chalk.bold(message)}`;
 export const underline = (message) => `${chalk.underline(message)}`;
+
+export function staticBuild() {
+  const sharedPublicPath = path.join(__dirname, "public");
+  const privatePublicPath = path.join(cwd, "public");
+
+  if (fs.existsSync(sharedPublicPath)) {
+    const stats = fs.statSync(sharedPublicPath);
+    if (
+      stats.isSymbolicLink() &&
+      fs.readlinkSync(sharedPublicPath) !== privatePublicPath
+    ) {
+      fs.unlinkSync(sharedPublicPath);
+      fs.symlinkSync(privatePublicPath, sharedPublicPath);
+      console.log(info(`Building for the first time`));
+      execSync("npm run build");
+    }
+  } else {
+    fs.symlinkSync(privatePublicPath, sharedPublicPath);
+    console.log(info(`Building for the first time`));
+    execSync("npm run build");
+  }
+}
 
 export function isSTSCredentialsExpired(credentials) {
   const expirationTime = credentials.Expiration;
@@ -43,7 +67,7 @@ export function isIdTokenExpired(idToken) {
     return expirationTime < currentTime;
   } catch (error) {
     // Handle token decoding or verification errors
-    console.error('Error decoding or verifying ID token:', error);
+    console.error("Error decoding or verifying ID token:", error);
     return false;
   }
 }
@@ -64,26 +88,22 @@ export function emoji(text, fallback) {
   return `${text} `;
 }
 
-export function getIIIFVersion(viewer) {
+export function getImageAPIVersion(iiifVersion) {
   const versionMapping = {
-    m2: "2",
-    m3: "3",
-    u3: "2",
-    u4: "2",
+    3: "3.0",
+    2: "2.1",
   };
 
-  return versionMapping[viewer];
+  return versionMapping[iiifVersion];
 }
 
-export function getImageAPIVersion(viewer) {
+export function getViewers(iiifVersion) {
   const versionMapping = {
-    m2: "2.1",
-    m3: "3.0",
-    u3: "2.1",
-    u4: "2.1",
+    3: ["m3"],
+    2: ["m2", "u3"],
   };
 
-  return versionMapping[viewer];
+  return versionMapping[iiifVersion];
 }
 
 export function getViewerName(viewer) {
@@ -126,18 +146,27 @@ export const registerShutdown = (fn) => {
   process.on("exit", wrapper);
 };
 
-export function patchViewer(indexPath, presentUuidList, labelList, viewer) {
-  const iiifVersion = getIIIFVersion(viewer);
+export function patchViewer(rootPath, presentUuidList, viewer) {
+  const indexPath = path.join(rootPath, `${viewer}.html`);
   let indexStr = fs.readFileSync(indexPath).toString();
   let manifestListStr = "";
-  let aList;
+
   switch (viewer) {
     case "m2":
       manifestListStr = JSON.stringify(
-        presentUuidList.map((e) => ({
-          manifestUri: `p/${iiifVersion}/${e}/manifest.json`,
-          location: "ETU",
-        }))
+        presentUuidList.map((e) => {
+          // generate each m2.html for manifest.json while return the manifestItem to generate manifest list
+          const manifestItem = {
+            manifestUri: `p/${e}/manifest.json`,
+            location: "ETU",
+          };
+          const indexStrItem = indexStr.replace(
+            "'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'",
+            JSON.stringify([manifestItem])
+          );
+          fs.writeFileSync(path.join(rootPath, `m2-${e}.html`), indexStrItem);
+          return manifestItem;
+        })
       );
 
       indexStr = indexStr.replace(
@@ -149,16 +178,32 @@ export function patchViewer(indexPath, presentUuidList, labelList, viewer) {
     case "m3":
       manifestListStr = JSON.stringify(
         presentUuidList.map((e) => ({
-          manifestId: `p/${iiifVersion}/${e}/manifest.json`,
+          manifestId: `p/${e}/manifest.json`,
           provider: "ETU",
         }))
       );
       indexStr = indexStr.replace(
         "'$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'",
         JSON.stringify(
-          presentUuidList.map((e) => ({
-            manifestId: `p/${iiifVersion}/${e}/manifest.json`,
-          }))
+          presentUuidList.map((e) => {
+            // generate each m3.html for manifest.json while return the manifestItem to generate manifest list
+            const manifestItem = {
+              manifestId: `p/${e}/manifest.json`,
+            };
+            let indexStrItem = indexStr.replace(
+              "'$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'",
+              JSON.stringify([{ manifestId: "manifest.json" }])
+            );
+            indexStrItem = indexStrItem.replace(
+              "'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'",
+              "[]"
+            );
+            fs.writeFileSync(
+              path.join(rootPath, `p/${e}/${viewer}.html`),
+              indexStrItem
+            );
+            return manifestItem;
+          })
         )
       );
 
@@ -174,37 +219,21 @@ export function patchViewer(indexPath, presentUuidList, labelList, viewer) {
           indexPath,
           indexStr.replace(
             "'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'",
-            `"p/${iiifVersion}/${presentUuidList[0]}/manifest.json"`
+            `"p/${presentUuidList[0]}/manifest.json"`
           )
         );
       } else {
         presentUuidList.forEach((e, i) => {
-          manifestListStr = `"p/${iiifVersion}/${e}/manifest.json"`;
+          manifestListStr = `"p/${e}/manifest.json"`;
 
           fs.writeFileSync(
-            path.join(cwd, "asset", `${e}.html`),
+            path.join(cwd, "public", `u3-${e}.html`),
             indexStr.replace(
               "'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'",
               manifestListStr
             )
           );
         });
-        fs.cpSync(
-          path.join(__dirname, "viewer", "index_template.html"),
-          path.join(cwd, "asset", "index.html")
-        );
-        aList = presentUuidList
-          .map(
-            (e, i) =>
-              `<a href="${e}.html" style="color: white;" target="_blank">${labelList[i]}</a>`
-          )
-          .join("<br>");
-
-        indexStr = fs.readFileSync(indexPath).toString();
-        fs.writeFileSync(
-          indexPath,
-          indexStr.replace("'$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'", aList)
-        );
       }
       break;
     case "u4":
@@ -213,37 +242,21 @@ export function patchViewer(indexPath, presentUuidList, labelList, viewer) {
           indexPath,
           indexStr.replace(
             "'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'",
-            `"p/${iiifVersion}/${presentUuidList[0]}/manifest.json"`
+            `"p/${presentUuidList[0]}/manifest.json"`
           )
         );
       } else {
         presentUuidList.forEach((e, i) => {
-          manifestListStr = `"p/${iiifVersion}/${e}/manifest.json"`;
+          manifestListStr = `"p/${e}/manifest.json"`;
 
           fs.writeFileSync(
-            path.join(cwd, "asset", `${e}.html`),
+            path.join(cwd, "public", `u4-${e}.html`),
             indexStr.replace(
               "'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'",
               manifestListStr
             )
           );
         });
-        fs.cpSync(
-          path.join(__dirname, "viewer", "index_template.html"),
-          path.join(cwd, "asset", "index.html")
-        );
-        aList = presentUuidList
-          .map(
-            (e, i) =>
-              `<a href="${e}.html" style="color: white;" target="_blank">${labelList[i]}</a>`
-          )
-          .join("<br>");
-
-        indexStr = fs.readFileSync(indexPath).toString();
-        fs.writeFileSync(
-          indexPath,
-          indexStr.replace("'$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'", aList)
-        );
       }
       break;
     default:
@@ -251,11 +264,11 @@ export function patchViewer(indexPath, presentUuidList, labelList, viewer) {
   }
 }
 
-export function generateManifest(rootPath, etuYaml, isRemote) {
-  const iiifVersion = getIIIFVersion(etuYaml.viewer);
-  const labelList = etuYaml.images.map((item) => item.label);
+export function generateManifest(etuYaml) {
+  const rootPath = path.join(cwd, "public");
+  const { presentBaseUrl, imageBaseUrl, format, isRemote, iiifVersion } = etuYaml;
+  const imageApiVersion = getImageAPIVersion(iiifVersion);
   const presentUuidList = [];
-  const { presentBaseUrl, imageBaseUrl, format } = etuYaml;
 
   for (const image of etuYaml.images) {
     const model = {
@@ -275,7 +288,7 @@ export function generateManifest(rootPath, etuYaml, isRemote) {
     for (const file of image.files) {
       // deep copy file object
       const item = JSON.parse(JSON.stringify(file));
-      // item.level0 = true; // generate level0 image
+      item.format = etuYaml.format;
       item.canvasUuid = uuid();
 
       if (isRemote) {
@@ -286,38 +299,28 @@ export function generateManifest(rootPath, etuYaml, isRemote) {
         // Add info.json for tiled image
         if (item.tile === true) {
           // console.log('for tile')
-          const processor = new SharpIiifShims(
-            getImageAPIVersion(etuYaml.viewer),
-            0,
-            "." + format
-          );
+          const processor = new SharpIiifShims(imageApiVersion, "2");
           const imageInfo = processor.generateImageInfo(
             imageBaseUrl + "/" + item.image_id,
             { width: item.width, height: item.height }
           );
-          delete imageInfo.info.extraFormats;
-          delete imageInfo.info.preferredFormats;
-          // console.log(imageInfo);
+          if (etuYaml.format !== "webp") {
+            delete imageInfo.info.extraFormats;
+            delete imageInfo.info.preferredFormats;
+          }
           fs.writeFileSync(
-            path.join(rootPath, "i", iiifVersion, item.image_id, "info.json"),
+            path.join(rootPath, "i", item.image_id, "info.json"),
             JSON.stringify(imageInfo.info)
           );
         } else if (iiifVersion === "2") {
           // console.log('for iiif2')
-          // Update info.json for IIIF 2
-          const processor = new IIIFImageShims(
-            getImageAPIVersion(etuYaml.viewer),
-            "0",
-            "." + format
-          );
-
+          const processor = new IIIFImageShims(imageApiVersion, "0");
           const imageInfo = processor.generateImageInfoTemp(
             imageBaseUrl + "/" + item.image_id,
             { width: item.width, height: item.height }
           );
-          // console.log(imageInfo);
           fs.writeFileSync(
-            path.join(rootPath, "i", iiifVersion, item.image_id, "info.json"),
+            path.join(rootPath, "i", item.image_id, "info.json"),
             JSON.stringify(imageInfo.info)
           );
         }
@@ -343,25 +346,21 @@ export function generateManifest(rootPath, etuYaml, isRemote) {
       .toString();
     const presentStr = Mustache.render(template, model);
 
-    const presentPath = path.join(
-      rootPath,
-      "p",
-      iiifVersion,
-      model.presentUuid
-    );
+    const presentPath = path.join(rootPath, "p", model.presentUuid);
     fs.mkdirSync(presentPath, { recursive: true });
     const presentFile = path.join(presentPath, "manifest.json");
     fs.writeFileSync(presentFile, presentStr);
   }
 
-  fs.cpSync(
-    path.join(__dirname, "viewer", etuYaml.viewer),
-    path.join(cwd, "asset"),
-    { recursive: true }
-  );
+  for (const viewer of getViewers(iiifVersion)) {
+    fs.cpSync(
+      path.join(__dirname, "viewer", viewer),
+      path.join(cwd, "public"),
+      { recursive: true }
+    );
 
-  console.log(info(`Patching viewer settings`));
-  const indexPath = path.join(rootPath, "index.html");
+    console.log(info(`Patching ${getViewerName(viewer)} settings`));
 
-  patchViewer(indexPath, presentUuidList, labelList, etuYaml.viewer);
+    patchViewer(rootPath, presentUuidList, viewer);
+  }
 }
