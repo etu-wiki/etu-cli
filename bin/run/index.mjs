@@ -147,7 +147,7 @@ if (options.cookbook) {
 } else {
   ETU_PATH = path.join(__dirname, "build");
   console.log(info(`ETU -- Simple but not simplistic`));
-  process.chdir(ETU_PATH);
+
   const etuLockYaml = path.join(cwd, "etu-lock.yaml");
 
   // etu-lock.yaml has to be existed before

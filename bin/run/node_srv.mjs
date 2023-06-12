@@ -39,6 +39,10 @@ import openInEditor from "open-in-editor";
 import livereload from "livereload";
 import serveHandler from "serve-handler";
 
+import {
+  IMAGE_API_ENDPOINT,
+} from "../config.mjs";
+
 const start = Date.now();
 
 function handleCookbook(rootPath, etuYaml) {
