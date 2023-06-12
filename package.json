@@ -1,6 +1,6 @@
 {
   "name": "etu-cli",
-  "version": "0.3.15",
+  "version": "0.3.16",
   "description": "command line tool to lanch iiif in localhost",
   "scripts": {
     "start": "react-scripts start",
