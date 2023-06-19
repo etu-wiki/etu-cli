@@ -2,7 +2,7 @@
 ## Introduction
 ETU CLI Pro is a local first IIIF solution to present your images. It converts them into IIIF compatible format and launch local http server to be interacted with.
 <p>
-ETU supports IIIF viewers such as Mirador 2, Mirador 3, Universal Viewer 3, Universal Viewer 4, CloverIIIF. 
+ETU supports IIIF viewers such as Mirador 2, Mirador 3, Universal Viewer 3, Universal Viewer 4. 
 <p>
 In addition to local run, ETU also integrates a serverless IIIF image server that emulate local viewing experience by inherited multi-layer cache design. High resolution images larger than 10000 x 10000 pixel is capable of being rendered smoothly without any perceptional delay. Popular image format like jp2 is supported out of box, while raw image can be compressed in storage efficient manner that only occupies 10% of the original storage volume.
 <p>
@@ -10,7 +10,7 @@ ETU ❤️ IIIF. We endeavor to democratizing IIIF technical stack to everyone w
 <br />
 <br />
 
-## Local Run
+## Local Run -- Level 0 Image Server running locally
 You can use [npm](https://www.npmjs.com/) or [Yarn](https://yarnpkg.com/en/) to install ETU, which requires [Node.js LTS](https://nodejs.org) at least: 
 
 ```bash
@@ -38,7 +38,7 @@ etu run
 ```
 <br />
 
-## Remote Run
+## Remote Run -- Level 2 Image Server running in the cloud
 To use the new serverless IIIF image server, first register a user account
 ```bash
 etu login

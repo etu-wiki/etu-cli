@@ -1,7 +1,7 @@
 node_modules
 fixture
 test
-lib
 .DS_Store
-.next
+build
 public
+etu.json

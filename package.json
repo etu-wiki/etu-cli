@@ -1,12 +1,12 @@
 {
   "name": "etu-cli",
-  "version": "0.3.0",
+  "version": "0.3.18",
   "description": "command line tool to lanch iiif in localhost",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
   },
   "keywords": [
     "etu",
@@ -22,11 +22,11 @@
     "bin",
     "viewer",
     "template",
-    "cookbook"
+    "cookbook",
+    "src"
   ],
-  "main": "./src/index.mjs",
   "bin": {
-    "etu": "bin/etu"
+    "etu": "./bin/index.mjs"
   },
   "type": "module",
   "dependencies": {
@@ -52,7 +52,6 @@
     "commander": "^9.4.1",
     "compression": "^1.7.4",
     "config": "^3.3.9",
-    "dockerode": "^3.3.4",
     "get-folder-size": "^4.0.0",
     "inquirer": "^9.1.4",
     "js-yaml": "^4.1.0",
@@ -61,11 +60,12 @@
     "md5": "^2.3.0",
     "md5-file": "^5.0.0",
     "mustache": "^4.2.0",
-    "next": "^13.4.4",
     "open": "^8.4.0",
     "open-in-editor": "^2.2.0",
     "ora": "^6.1.0",
     "p-limit": "^4.0.0",
+    "react-router-dom": "^6.12.1",
+    "react-scripts": "^5.0.1",
     "serve-handler": "^6.1.3",
     "sharp": "^0.32.1",
     "tar": "^6.1.11",
@@ -78,5 +78,18 @@
   "peerDependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
-  }
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "homepage": "."
 }
