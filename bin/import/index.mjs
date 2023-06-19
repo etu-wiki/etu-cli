@@ -223,6 +223,7 @@ etuLockYaml.images.push(...compressedFileFolderInfoList);
 etuLockYaml.images = etuLockYaml.images.filter(
   (image) => image.files.length > 0
 );
+etuLockYaml.images.map((image) => {image.label = image.files[0].label});
 
 fs.writeFileSync(`${cwd}/etu.yaml`, yaml.dump(etuYaml));
 
