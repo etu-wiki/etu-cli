@@ -141,7 +141,13 @@ const etuYaml = yaml.load(fs.readFileSync(etuLockYamlPath).toString());
 for (let imagePath of etuYaml.images) {
   for (let file of imagePath.files) {
     const item = JSON.parse(JSON.stringify(file));
-    const fileFullPath = path.join(imagePath.path, file.filename);
+    // if imagePath.path is directory
+    let fileFullPath;
+    if (fs.lstatSync(imagePath.path).isDirectory()) {
+      fileFullPath = path.resolve(imagePath.path, file.filename);
+    } else {
+      fileFullPath = imagePath.path;
+    }
     item.filepath = fileFullPath;
     item.label = imagePath.label + " " + file.label;
     item.iiifversion = etuYaml.iiifVersion;
