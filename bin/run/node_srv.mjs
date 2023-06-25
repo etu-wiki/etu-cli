@@ -69,14 +69,15 @@ function handleCookbook(rootPath, etuYaml) {
 
   patchViewer(rootPath, [presentUuid], etuYaml.viewer);
 
-  const sharedPublicPath = path.join(__dirname, 'app', "public");
-  if (fs.existsSync(sharedPublicPath)) {
-    fs.unlinkSync(sharedPublicPath);
-  }
-  fs.symlinkSync(rootPath, sharedPublicPath);
+  // const sharedPublicPath = path.join(__dirname, 'app', "public");
+  // if (fs.existsSync(sharedPublicPath)) {
+  //   fs.unlinkSync(sharedPublicPath);
+  // }
+  // fs.symlinkSync(rootPath, sharedPublicPath);
 }
 
 export function run(rootPath, options, etuYaml) {
+  console.log(rootPath)
   // let baseUrl = "http://localhost:3000";
 
   // etuYaml with name is etu project and should generate manifest and index.html

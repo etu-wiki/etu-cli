@@ -186,9 +186,9 @@ export default function Page() {
                   </CardContent>
                   {etu.iiifVersion === '3' ? (
                     <CardActions>
-                      {/* <Link href={`u4-${present.presentUuid}.html`}>Universal 4</Link>
-                      <Link href={`/p/${present.presentUuid}/m3.html`}>Mirador 3</Link> */}
-                      <Link href={`http://localhost/index.html?manifest=http://localhost/p/3/${present.presentUuid}`}>Mirador 3-ocr</Link>
+                      <Link href={`u4-${present.presentUuid}.html`}>Universal 4</Link>
+                      <Link href={`/p/${present.presentUuid}/m3.html`}>Mirador 3</Link>
+                      {/* <Link href={`http://localhost/index.html?manifest=http://localhost/p/3/${present.presentUuid}`}>Mirador 3-ocr</Link> */}
                       {/* <Link2 href={`#clover/${present.presentUuid}`}>Clover</Link2> */}
                     </CardActions>
                   ) : (

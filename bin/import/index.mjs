@@ -142,17 +142,21 @@ async function expandPath(image, rootPath) {
         // skip image conversion in remote mode
         if (!options.remote) {
           if (meta.height > HD_DIM_THRESHOLD || meta.width > HD_DIM_THRESHOLD) {
-
-            const spinner = ora(
-              `Converting standard ${filePath} `
-            ).start();
+            const spinner = ora(`Converting standard ${filePath} `).start();
             compressedFileInfo.level0 = true;
-            await image.resize({ width: HD_DIM_THRESHOLD, height: HD_DIM_THRESHOLD, fit: 'inside' }).toFile(path.join(
-              imageFolder,
-              compressedFileInfo.image_id + "." + etuYaml.format
-            ))
+            await image
+              .resize({
+                width: HD_DIM_THRESHOLD,
+                height: HD_DIM_THRESHOLD,
+                fit: "inside",
+              })
+              .toFile(
+                path.join(
+                  imageFolder,
+                  compressedFileInfo.image_id + "." + etuYaml.format
+                )
+              );
             spinner.stop();
-
           } else {
             compressedFileInfo.level0 = true;
             const targetFile = path.join(
@@ -211,8 +215,15 @@ for (const image of etuYaml.images) {
       image,
       path.join(image.path, "..")
     );
+    let label;
+    if (compressedFileInfoList.length === 1) {
+      label = compressedFileFolderInfoList[0].label;
+    } else {
+      label = image.path.split(path.sep).pop();
+    }
     etuLockYaml.images.push({
       path: image.path,
+      label,
       files: compressedFileInfoList,
     });
   }
@@ -222,7 +233,6 @@ etuLockYaml.images.push(...compressedFileFolderInfoList);
 etuLockYaml.images = etuLockYaml.images.filter(
   (image) => image.files.length > 0
 );
-etuLockYaml.images.map((image) => {image.label = image.files[0].label});
 
 fs.writeFileSync(`${cwd}/etu.yaml`, yaml.dump(etuYaml));
 
@@ -234,6 +244,7 @@ if (options.remote) {
   etuLockYaml.isRemote = true;
   etuLockYaml.imageBaseUrl = IMAGE_API_ENDPOINT;
 } else {
+  etuLockYaml.isRemote = false;
   etuLockYaml.imageBaseUrl = baseUrl + "/i/";
 }
 

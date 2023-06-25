@@ -30,25 +30,11 @@ export const bold = (message) => `${chalk.bold(message)}`;
 export const underline = (message) => `${chalk.underline(message)}`;
 
 export function staticBuild() {
-  const sharedPublicPath = path.join(__dirname, "app", "public");
-  const privatePublicPath = path.join(cwd, "public");
-
-  if (fs.existsSync(sharedPublicPath)) {
-    const stats = fs.statSync(sharedPublicPath);
-    if (
-      stats.isSymbolicLink() &&
-      fs.readlinkSync(sharedPublicPath) !== privatePublicPath
-    ) {
-      fs.unlinkSync(sharedPublicPath);
-      fs.symlinkSync(privatePublicPath, sharedPublicPath);
-      console.log(info(`Building for the first time`));
-      execSync("npm run build", { cwd: path.join(__dirname, "app") });
-    }
-  } else {
-    fs.symlinkSync(privatePublicPath, sharedPublicPath);
-    console.log(info(`Building for the first time`));
-    execSync("npm run build", { cwd: path.join(__dirname, "app") });
-  }
+  console.log(info(`Building for the first time`));
+  execSync("npm run build", { cwd: path.join(__dirname, "app") });
+  fs.cpSync(path.join(__dirname, "app", "dist"), path.join(cwd, "public"), {
+    recursive: true,
+  });
 }
 
 export function isSTSCredentialsExpired(credentials) {
@@ -365,8 +351,8 @@ export function generateManifest(etuYaml) {
     patchViewer(rootPath, presentUuidList, viewer);
   }
 
-  fs.cpSync(
-    path.join(__dirname, "viewer", "index.html"),
-    path.join(cwd, "public", "index.html")
-  );
+  // fs.cpSync(
+  //   path.join(__dirname, "viewer", "index.html"),
+  //   path.join(cwd, "public", "index.html")
+  // );
 }
