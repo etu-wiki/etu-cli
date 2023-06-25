@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import AppBar from '@mui/material/AppBar/index.js';
 import Button from '@mui/material/Button/index.js';
 import Switch from '@mui/material/Switch/index.js';
@@ -19,15 +19,15 @@ import ThemeProvider from '@mui/material/styles/ThemeProvider.js';
 import createTheme from '@mui/material/styles/createTheme.js';
 import styled from '@mui/material/styles/styled.js';
 
-import { Link as Link2 } from "react-router-dom";
+// import { Link as Link2 } from "react-router-dom";
 
-import etu from './etu.json';
+import etu from './assets/etu.json';
 
 import {
   THUMB_WIDTH_THRESHOLD,
   THUMB_HEIGHT_THRESHOLD,
   IMAGE_API_ENDPOINT,
-} from "./config.mjs";
+} from "./config.js";
 
 function Copyright() {
   return (
@@ -188,6 +188,7 @@ export default function Page() {
                     <CardActions>
                       <Link href={`u4-${present.presentUuid}.html`}>Universal 4</Link>
                       <Link href={`/p/${present.presentUuid}/m3.html`}>Mirador 3</Link>
+                      {/* <Link href={`http://localhost/index.html?manifest=http://localhost/p/3/${present.presentUuid}`}>Mirador 3-ocr</Link> */}
                       {/* <Link2 href={`#clover/${present.presentUuid}`}>Clover</Link2> */}
                     </CardActions>
                   ) : (

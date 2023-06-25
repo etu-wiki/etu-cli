@@ -142,10 +142,9 @@ if (options.cookbook) {
 
   registerShutdown(() => {
     fs.rmSync(ETU_PATH, { recursive: true, force: true });
-    fs.unlinkSync(path.join(__dirname, 'public'));
   });
 } else {
-  ETU_PATH = path.join(__dirname, "build");
+  ETU_PATH = path.join(cwd, "public");
   console.log(info(`ETU -- Simple but not simplistic`));
 
   const etuLockYaml = path.join(cwd, "etu-lock.yaml");

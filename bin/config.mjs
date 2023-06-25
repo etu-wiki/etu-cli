@@ -7,6 +7,7 @@ export const IMAGE_API_ENDPOINT = 'https://image.iiify.com'
 export const ADMIN_API_ENDPOINT = "https://kciiqwtr90.execute-api.us-east-1.amazonaws.com/prod"
 
 export const AWS_REGION = "us-east-1"
+
 export const THUMB_WIDTH_THRESHOLD = 1000 * 4;
 export const THUMB_HEIGHT_THRESHOLD = 1000;
 export const HD_DIM_THRESHOLD = 10000;

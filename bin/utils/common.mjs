@@ -30,25 +30,11 @@ export const bold = (message) => `${chalk.bold(message)}`;
 export const underline = (message) => `${chalk.underline(message)}`;
 
 export function staticBuild() {
-  const sharedPublicPath = path.join(__dirname, "public");
-  const privatePublicPath = path.join(cwd, "public");
-
-  if (fs.existsSync(sharedPublicPath)) {
-    const stats = fs.statSync(sharedPublicPath);
-    if (
-      stats.isSymbolicLink() &&
-      fs.readlinkSync(sharedPublicPath) !== privatePublicPath
-    ) {
-      fs.unlinkSync(sharedPublicPath);
-      fs.symlinkSync(privatePublicPath, sharedPublicPath);
-      console.log(info(`Building for the first time`));
-      execSync("npm run build", { cwd: __dirname });
-    }
-  } else {
-    fs.symlinkSync(privatePublicPath, sharedPublicPath);
-    console.log(info(`Building for the first time`));
-    execSync("npm run build", { cwd: __dirname });
-  }
+  console.log(info(`Building for the first time`));
+  execSync("npm run build", { cwd: __dirname });
+  fs.cpSync(path.join(__dirname, "dist"), path.join(cwd, "public"), {
+    recursive: true,
+  });
 }
 
 export function isSTSCredentialsExpired(credentials) {
@@ -214,50 +200,30 @@ export function patchViewer(rootPath, presentUuidList, viewer) {
       fs.writeFileSync(indexPath, indexStr);
       break;
     case "u3":
-      if (presentUuidList.length === 1) {
+      presentUuidList.forEach((e, i) => {
+        manifestListStr = `"p/${e}/manifest.json"`;
+
         fs.writeFileSync(
-          indexPath,
+          path.join(cwd, "public", `u3-${e}.html`),
           indexStr.replace(
             "'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'",
-            `"p/${presentUuidList[0]}/manifest.json"`
+            manifestListStr
           )
         );
-      } else {
-        presentUuidList.forEach((e, i) => {
-          manifestListStr = `"p/${e}/manifest.json"`;
-
-          fs.writeFileSync(
-            path.join(cwd, "public", `u3-${e}.html`),
-            indexStr.replace(
-              "'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'",
-              manifestListStr
-            )
-          );
-        });
-      }
+      });
       break;
     case "u4":
-      if (presentUuidList.length === 1) {
+      presentUuidList.forEach((e, i) => {
+        manifestListStr = `"p/${e}/manifest.json"`;
+
         fs.writeFileSync(
-          indexPath,
+          path.join(cwd, "public", `u4-${e}.html`),
           indexStr.replace(
             "'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'",
-            `"p/${presentUuidList[0]}/manifest.json"`
+            manifestListStr
           )
         );
-      } else {
-        presentUuidList.forEach((e, i) => {
-          manifestListStr = `"p/${e}/manifest.json"`;
-
-          fs.writeFileSync(
-            path.join(cwd, "public", `u4-${e}.html`),
-            indexStr.replace(
-              "'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'",
-              manifestListStr
-            )
-          );
-        });
-      }
+      });
       break;
     default:
       break;
@@ -365,8 +331,8 @@ export function generateManifest(etuYaml) {
     patchViewer(rootPath, presentUuidList, viewer);
   }
 
-  fs.cpSync(
-    path.join(__dirname, "viewer", "index.html"),
-    path.join(cwd, "public", "index.html")
-  );
+  // fs.cpSync(
+  //   path.join(__dirname, "viewer", "index.html"),
+  //   path.join(cwd, "public", "index.html")
+  // );
 }

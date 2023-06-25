@@ -117,6 +117,7 @@ const client = new S3(stsCredentials);
 
 const dbclient = new DynamoDB(stsCredentials);
 
+
 const ddbDocClient = DynamoDBDocument.from(dbclient);
 
 const description = `Publish your Images to ETU IIIF server

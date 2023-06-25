@@ -68,15 +68,10 @@ function handleCookbook(rootPath, etuYaml) {
   console.log(info(`Patching viewer settings`));
 
   patchViewer(rootPath, [presentUuid], etuYaml.viewer);
-
-  const sharedPublicPath = path.join(__dirname, "public");
-  if (fs.existsSync(sharedPublicPath)) {
-    fs.unlinkSync(sharedPublicPath);
-  }
-  fs.symlinkSync(rootPath, sharedPublicPath);
 }
 
 export function run(rootPath, options, etuYaml) {
+  console.log(rootPath)
   // let baseUrl = "http://localhost:3000";
 
   // etuYaml with name is etu project and should generate manifest and index.html
@@ -158,7 +153,7 @@ export function run(rootPath, options, etuYaml) {
 
       // convert etuYaml to json and save to etu.json under public folder
       fs.writeFileSync(
-        `${__dirname}/src/etu.json`,
+        `${__dirname}/app/etu.json`,
         JSON.stringify(etuYaml, null, 2)
       );
 

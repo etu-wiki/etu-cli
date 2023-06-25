@@ -68,11 +68,8 @@ if (options.y) {
   ]);
 }
 if (isContinue.continue) {
-  const sharedPublicPath = path.join(__dirname, "public");
   const privatePublicPath = path.join(cwd, "public");
-  if (fs.existsSync(sharedPublicPath)) {
-    fs.unlinkSync(sharedPublicPath, { recursive: true });
-  }
+
   if (fs.existsSync(privatePublicPath)) {
     fs.rmSync(privatePublicPath, { recursive: true });
   }
