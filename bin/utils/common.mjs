@@ -30,7 +30,7 @@ export const bold = (message) => `${chalk.bold(message)}`;
 export const underline = (message) => `${chalk.underline(message)}`;
 
 export function staticBuild() {
-  const sharedPublicPath = path.join(__dirname, "public");
+  const sharedPublicPath = path.join(__dirname, "app", "public");
   const privatePublicPath = path.join(cwd, "public");
 
   if (fs.existsSync(sharedPublicPath)) {
@@ -42,12 +42,12 @@ export function staticBuild() {
       fs.unlinkSync(sharedPublicPath);
       fs.symlinkSync(privatePublicPath, sharedPublicPath);
       console.log(info(`Building for the first time`));
-      execSync("npm run build", { cwd: __dirname });
+      execSync("npm run build", { cwd: path.join(__dirname, "app") });
     }
   } else {
     fs.symlinkSync(privatePublicPath, sharedPublicPath);
     console.log(info(`Building for the first time`));
-    execSync("npm run build", { cwd: __dirname });
+    execSync("npm run build", { cwd: path.join(__dirname, "app") });
   }
 }
 

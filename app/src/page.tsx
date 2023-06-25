@@ -1,32 +1,33 @@
-import React, { useState } from 'react';
-import AppBar from '@mui/material/AppBar';
-import Button from '@mui/material/Button';
-import Switch from '@mui/material/Switch';
-import Card from '@mui/material/Card';
-import CardActions from '@mui/material/CardActions';
-import CardContent from '@mui/material/CardContent';
-import CardMedia from '@mui/material/CardMedia';
-import CssBaseline from '@mui/material/CssBaseline';
-import Grid from '@mui/material/Grid';
-import Stack from '@mui/material/Stack';
-import Box from '@mui/material/Box';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import Container from '@mui/material/Container';
-import Link from '@mui/material/Link';
-import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
-import FormControlLabel from '@mui/material/FormControlLabel';
+import { useState } from 'react';
+import AppBar from '@mui/material/AppBar/index.js';
+import Button from '@mui/material/Button/index.js';
+import Switch from '@mui/material/Switch/index.js';
+import Card from '@mui/material/Card/index.js';
+import CardActions from '@mui/material/CardActions/index.js';
+import CardContent from '@mui/material/CardContent/index.js';
+import CardMedia from '@mui/material/CardMedia/index.js';
+import CssBaseline from '@mui/material/CssBaseline/index.js';
+import Grid from '@mui/material/Grid/index.js';
+import Stack from '@mui/material/Stack/index.js';
+import Box from '@mui/material/Box/index.js';
+import Toolbar from '@mui/material/Toolbar/index.js';
+import Typography from '@mui/material/Typography/index.js';
+import Container from '@mui/material/Container/index.js';
+import Link from '@mui/material/Link/index.js';
+import FormControlLabel from '@mui/material/FormControlLabel/index.js';
+import ThemeProvider from '@mui/material/styles/ThemeProvider.js';
+import createTheme from '@mui/material/styles/createTheme.js';
+import styled from '@mui/material/styles/styled.js';
 
-import etu from '../public/etu.json';
+// import { Link as Link2 } from "react-router-dom";
 
+import etu from './assets/etu.json';
+const win: Window = window;
 import {
   THUMB_WIDTH_THRESHOLD,
   THUMB_HEIGHT_THRESHOLD,
-  HD_DIM_THRESHOLD,
-  TILE_DIM,
   IMAGE_API_ENDPOINT,
-} from "../src/config.mjs";
-import { padding } from '@mui/system';
+} from "./config.ts";
 
 function Copyright() {
   return (
@@ -99,7 +100,7 @@ const MaterialUISwitch = styled(Switch)(({ theme }) => ({
 }));
 
 export default function Page() {
-  const [dark, setDark] = useState<boolean>(true);
+  const [dark, setDark] = useState(true);
 
   const handleThemeChange = () => {
     setDark(!dark);
@@ -155,11 +156,10 @@ export default function Page() {
               justifyContent="center"
             >
               {etu.iiifVersion === '3' ? (
-                <Button variant="contained" onClick={() => window.location = '/m3.html'}>All in Mirador 3</Button>
+                <Button variant="contained" onClick={() => win.location = '/m3.html'}>All in Mirador 3</Button>
               ) : (
-                <Button variant="contained" onClick={() => window.location = '/m2.html'}>All in Mirador 2</Button>
+                <Button variant="contained" onClick={() => win.location = '/m2.html'}>All in Mirador 2</Button>
               )}
-              {/* <Button variant="outlined">Secondary action</Button> */}
             </Stack>
           </Container>
         </Box>
@@ -184,18 +184,18 @@ export default function Page() {
                       {present.label}
                     </Typography>
                   </CardContent>
-                  {/* <Button size="small" onClick={() => router.push(`/clover/${present.presentUuid}`)}>View</Button>
-                    <Button size="small">Edit</Button> */}
                   {etu.iiifVersion === '3' ? (
                     <CardActions>
-                      <Link href={`/p/${present.presentUuid}/m3.html`}>Mirador 3</Link>
-                      <Link href={`/clover/${present.presentUuid}`}>Clover</Link>
+                      {/* <Link href={`u4-${present.presentUuid}.html`}>Universal 4</Link>
+                      <Link href={`/p/${present.presentUuid}/m3.html`}>Mirador 3</Link> */}
+                      <Link href={`http://localhost/index.html?manifest=http://localhost/p/3/${present.presentUuid}`}>Mirador 3-ocr</Link>
+                      {/* <Link2 href={`#clover/${present.presentUuid}`}>Clover</Link2> */}
                     </CardActions>
                   ) : (
                     <CardActions>
-                      <Link href={`u3-${present.presentUuid}.html`} prefetch="false">Universal 3</Link>
+                      <Link href={`u3-${present.presentUuid}.html`}>Universal 3</Link>
                       <Link href={`m2-${present.presentUuid}.html`}>Mirador 2</Link>
-                      <Link href={`/clover/${present.presentUuid}`}>Clover</Link>
+                      {/* <Link2 href={`#clover/${present.presentUuid}`}>Clover</Link2> */}
                     </CardActions>
                   )}
                 </Card>

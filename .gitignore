@@ -2,6 +2,6 @@ node_modules
 fixture
 test
 .DS_Store
-build
+dist
 public
 etu.json

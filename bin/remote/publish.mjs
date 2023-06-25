@@ -37,85 +37,96 @@ import yaml from "js-yaml";
 import { DynamoDB } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
 
-const credPath = path.join(os.homedir(), ".etu", ".credentials");
-if (!fs.existsSync(credPath)) {
-  console.log("Please login first");
-  process.exit(1);
-}
-const credentials = yaml.load(fs.readFileSync(credPath).toString());
+// const credPath = path.join(os.homedir(), ".etu", ".credentials");
+// if (!fs.existsSync(credPath)) {
+//   console.log("Please login first");
+//   process.exit(1);
+// }
+// const credentials = yaml.load(fs.readFileSync(credPath).toString());
 
-if (isSTSCredentialsExpired(credentials.sts)) {
-  console.log("Refreshing credentials");
-  // Configure the Cognito client
-  const cognitoClient = new CognitoIdentity({
-    region: AWS_REGION,
-  });
+// if (isSTSCredentialsExpired(credentials.sts)) {
+//   console.log("Refreshing credentials");
+//   // Configure the Cognito client
+//   const cognitoClient = new CognitoIdentity({
+//     region: AWS_REGION,
+//   });
 
-  // Configure the Cognito client
-  const cognitoProviderClient = new CognitoIdentityProvider({
-    region: AWS_REGION,
-  });
+//   // Configure the Cognito client
+//   const cognitoProviderClient = new CognitoIdentityProvider({
+//     region: AWS_REGION,
+//   });
 
-  const refreshToken = credentials.token.RefreshToken;
-  try {
-    // Initiate authentication with the refresh token
-    const initiateAuthParams = {
-      AuthFlow: "REFRESH_TOKEN_AUTH",
-      ClientId: COGNITO_CLIENT_ID,
-      AuthParameters: {
-        REFRESH_TOKEN: refreshToken,
-      },
-    };
+//   const refreshToken = credentials.token.RefreshToken;
+//   try {
+//     // Initiate authentication with the refresh token
+//     const initiateAuthParams = {
+//       AuthFlow: "REFRESH_TOKEN_AUTH",
+//       ClientId: COGNITO_CLIENT_ID,
+//       AuthParameters: {
+//         REFRESH_TOKEN: refreshToken,
+//       },
+//     };
 
-    const initiateAuthResponse = await cognitoProviderClient.initiateAuth(
-      initiateAuthParams
-    );
+//     const initiateAuthResponse = await cognitoProviderClient.initiateAuth(
+//       initiateAuthParams
+//     );
 
-    const newAccessToken =
-      initiateAuthResponse.AuthenticationResult.AccessToken;
-    const newIdToken = initiateAuthResponse.AuthenticationResult.IdToken;
+//     const newAccessToken =
+//       initiateAuthResponse.AuthenticationResult.AccessToken;
+//     const newIdToken = initiateAuthResponse.AuthenticationResult.IdToken;
 
-    credentials.token.AccessToken = newAccessToken;
-    credentials.token.IdToken = newIdToken;
-  } catch (error) {
-    if (error.message === "Refresh Token has been revoked") {
-      console.log("Please login first");
-      process.exit(1);
-    }
+//     credentials.token.AccessToken = newAccessToken;
+//     credentials.token.IdToken = newIdToken;
+//   } catch (error) {
+//     if (error.message === "Refresh Token has been revoked") {
+//       console.log("Please login first");
+//       process.exit(1);
+//     }
+//   }
+
+//   // Get the identity ID using the access token
+//   const userPoolEndpoint = `cognito-idp.${AWS_REGION}.amazonaws.com/${USER_POOL_ID}`;
+//   const logins = {};
+//   logins[userPoolEndpoint] = credentials.token.IdToken;
+
+//   const { IdentityId } = await cognitoClient.getId({
+//     IdentityPoolId: IDENTITY_POOL_ID,
+//     Logins: logins,
+//   });
+
+//   // // Get the temporary credentials using the identity ID
+//   const { Credentials } = await cognitoClient.getCredentialsForIdentity({
+//     IdentityId,
+//     Logins: logins,
+//   });
+
+//   credentials.sts = Credentials;
+//   fs.writeFileSync(credPath, yaml.dump(credentials));
+// }
+
+// const stsCredentials = {
+//   region: AWS_REGION,
+//   credentials: {
+//     accessKeyId: credentials.sts.AccessKeyId,
+//     secretAccessKey: credentials.sts.SecretKey,
+//     sessionToken: credentials.sts.SessionToken,
+//   },
+// };
+
+// const client = new S3(stsCredentials);
+
+// const dbclient = new DynamoDB(stsCredentials);
+
+const credentials = {
+  user: {
+    id: '9488d438-20c1-7060-43a9-738dc4ca88da'
   }
-
-  // Get the identity ID using the access token
-  const userPoolEndpoint = `cognito-idp.${AWS_REGION}.amazonaws.com/${USER_POOL_ID}`;
-  const logins = {};
-  logins[userPoolEndpoint] = credentials.token.IdToken;
-
-  const { IdentityId } = await cognitoClient.getId({
-    IdentityPoolId: IDENTITY_POOL_ID,
-    Logins: logins,
-  });
-
-  // // Get the temporary credentials using the identity ID
-  const { Credentials } = await cognitoClient.getCredentialsForIdentity({
-    IdentityId,
-    Logins: logins,
-  });
-
-  credentials.sts = Credentials;
-  fs.writeFileSync(credPath, yaml.dump(credentials));
 }
+const client = new S3({region: AWS_REGION});
+const dbclient = new DynamoDB({region: AWS_REGION});
 
-const stsCredentials = {
-  region: AWS_REGION,
-  credentials: {
-    accessKeyId: credentials.sts.AccessKeyId,
-    secretAccessKey: credentials.sts.SecretKey,
-    sessionToken: credentials.sts.SessionToken,
-  },
-};
 
-const client = new S3(stsCredentials);
 
-const dbclient = new DynamoDB(stsCredentials);
 
 const ddbDocClient = DynamoDBDocument.from(dbclient);
 

@@ -58,7 +58,6 @@ if (fs.existsSync(etuLockYamlPath)) {
   etuLockYaml = JSON.parse(JSON.stringify(etuYaml));
 }
 
-const iiifVersion = etuYaml.iiifVersion;
 const imageFolder = path.join(cwd, "public", "i");
 const sourceFileFolderInfoList = [];
 const compressedFileFolderInfoList = [];
@@ -243,7 +242,7 @@ fs.writeFileSync(`${cwd}/etu-lock.yaml`, yaml.dump(etuLockYaml));
 
 // convert etuLockYaml to json and save to etu.json under public folder
 fs.writeFileSync(
-  `${__dirname}/src/etu.json`,
+  `${__dirname}/app/src/assets/etu.json`,
   JSON.stringify(etuLockYaml, null, 2)
 );
 

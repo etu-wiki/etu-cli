@@ -69,7 +69,7 @@ function handleCookbook(rootPath, etuYaml) {
 
   patchViewer(rootPath, [presentUuid], etuYaml.viewer);
 
-  const sharedPublicPath = path.join(__dirname, "public");
+  const sharedPublicPath = path.join(__dirname, 'app', "public");
   if (fs.existsSync(sharedPublicPath)) {
     fs.unlinkSync(sharedPublicPath);
   }
@@ -158,7 +158,7 @@ export function run(rootPath, options, etuYaml) {
 
       // convert etuYaml to json and save to etu.json under public folder
       fs.writeFileSync(
-        `${__dirname}/src/etu.json`,
+        `${__dirname}/app/src/etu.json`,
         JSON.stringify(etuYaml, null, 2)
       );
 
