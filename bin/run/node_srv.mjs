@@ -71,7 +71,7 @@ function handleCookbook(rootPath, etuYaml) {
 }
 
 export function run(rootPath, options, etuYaml) {
-  console.log(rootPath)
+  console.log(info('Content: ' + rootPath))
   // let baseUrl = "http://localhost:3000";
 
   // etuYaml with name is etu project and should generate manifest and index.html

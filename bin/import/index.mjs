@@ -135,12 +135,11 @@ async function expandPath(image, rootPath) {
         compressedFileInfo.width = meta.width;
         // compressedFileInfo.md5 = md5File.sync(sourceFile);
 
-        fs.mkdirSync(path.join(imageFolder, compressedFileInfo.image_id), {
-          recursive: true,
-        });
-
         // skip image conversion in remote mode
         if (!options.remote) {
+          fs.mkdirSync(path.join(imageFolder, compressedFileInfo.image_id), {
+            recursive: true,
+          });
           if (meta.height > HD_DIM_THRESHOLD || meta.width > HD_DIM_THRESHOLD) {
             const spinner = ora(`Converting standard ${filePath} `).start();
             compressedFileInfo.level0 = true;
