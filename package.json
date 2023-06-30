@@ -1,6 +1,6 @@
 {
   "name": "etu-cli",
-  "version": "0.3.38",
+  "version": "0.3.39",
   "description": "command line tool to lanch iiif in localhost",
   "keywords": [
     "etu",
