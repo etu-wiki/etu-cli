@@ -39,9 +39,7 @@ import openInEditor from "open-in-editor";
 import livereload from "livereload";
 import serveHandler from "serve-handler";
 
-import {
-  IMAGE_API_ENDPOINT,
-} from "../config.mjs";
+import { IMAGE_API_ENDPOINT } from "../config.mjs";
 
 const start = Date.now();
 
@@ -71,7 +69,7 @@ function handleCookbook(rootPath, etuYaml) {
 }
 
 export function run(rootPath, options, etuYaml) {
-  console.log(info('Content: ' + rootPath))
+  console.log(info("Content: " + rootPath));
   // let baseUrl = "http://localhost:3000";
 
   // etuYaml with name is etu project and should generate manifest and index.html
@@ -138,12 +136,17 @@ export function run(rootPath, options, etuYaml) {
       // networkAddress = ip ? `${httpMode}://${ip}:${details.port}` : null;
     }
 
-    // regenerate manifest and etu-lock.yaml when localAddress changed
-    if (localAddress !== "http://localhost:3000" && !options.cookbook) {
-      if (etuYaml.isRemote) {
+    // regenerate manifest and etu-lock.yaml when localAddress changed or published local images and not cookbook
+    if (
+      (localAddress !== "http://localhost:3000" ||
+        (options.remote && etuYaml.isPublished)) &&
+      !options.cookbook
+    ) {
+      if (etuYaml.isRemote || options.remote) {
+        etuYaml.isRemote = true;
         etuYaml.imageBaseUrl = IMAGE_API_ENDPOINT;
       } else {
-        etuYaml.imageBaseUrl = localAddress + "/i/";
+        etuYaml.imageBaseUrl = localAddress + "";
       }
 
       console.log(info(`Generating Manifests`));
@@ -153,7 +156,7 @@ export function run(rootPath, options, etuYaml) {
 
       // convert etuYaml to json and save to etu.json under public folder
       fs.writeFileSync(
-        `${__dirname}/app/etu.json`,
+        `${__dirname}/app/assets/etu.json`,
         JSON.stringify(etuYaml, null, 2)
       );
 

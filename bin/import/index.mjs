@@ -244,7 +244,7 @@ if (options.remote) {
   etuLockYaml.imageBaseUrl = IMAGE_API_ENDPOINT;
 } else {
   etuLockYaml.isRemote = false;
-  etuLockYaml.imageBaseUrl = baseUrl + "/i/";
+  etuLockYaml.imageBaseUrl = baseUrl + "/i";
 }
 
 generateManifest(etuLockYaml);
