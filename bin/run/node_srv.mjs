@@ -167,6 +167,7 @@ export function run(rootPath, options, etuYaml) {
 
     if (process.stdout.isTTY && process.env.NODE_ENV !== "production") {
       let message = info(`Accepting connections on ${localAddress}\n`);
+      message += `${info("Image Server mode:")} ${etuYaml.isRemote ? "remote" : "local"}\n`;
       message += `\n${bold("- Startup Time:")}  ${
         (stop - start) / 1000
       } seconds`;
