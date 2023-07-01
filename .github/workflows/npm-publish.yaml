@@ -18,7 +18,13 @@ jobs:
         with:
           node-version: '14'
 
-      - name: Add version
+      - name: Add Email
+        run: git config --global user.email "joesong168@qq.com"
+
+      - name: Add Name
+        run: git config --global user.name "Jie Song"
+
+      - name: Patch Version
         run: npm version patch
 
       - name: Publish to NPM
