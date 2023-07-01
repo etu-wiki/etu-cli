@@ -27,6 +27,11 @@ jobs:
       - name: Patch Version
         run: npm version patch
 
+      - name: Login
+        run: npm login --registry=https://registry.npmjs.org/
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+          
       - name: Publish to NPM
         run: npm publish
         env:
