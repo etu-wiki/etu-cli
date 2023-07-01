@@ -21,6 +21,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Add version
+        run: npm version patch
+
       - name: Publish to NPM
         run: npm publish
         env:
