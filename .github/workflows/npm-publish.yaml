@@ -1,38 +1,17 @@
-name: NPM Publish
-
+name: Publish Package to npmjs
 on:
-  push:
-    branches:
-      - main
-
+  release:
+    types: [published]
 jobs:
-  build-and-publish:
+  build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
+      - uses: actions/checkout@v3
+      # Setup .npmrc file to publish to npm
+      - uses: actions/setup-node@v3
         with:
-          node-version: '14'
-
-      - name: Add Email
-        run: git config --global user.email "joesong168@qq.com"
-
-      - name: Add Name
-        run: git config --global user.name "Jie Song"
-
-      - name: Patch Version
-        run: npm version patch
-
-      - name: Login
-        run: npm login --registry=https://registry.npmjs.org/
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-          
-      - name: Publish to NPM
-        run: npm publish
+          node-version: '16.x'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
