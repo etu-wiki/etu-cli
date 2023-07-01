@@ -13,6 +13,8 @@ import {
   warning,
   underline,
   isIdTokenExpired,
+  generateManifest,
+  staticBuild
 } from "../utils/common.mjs";
 import pLimit from "p-limit";
 
@@ -23,6 +25,7 @@ import {
   COGNITO_CLIENT_ID,
   AWS_REGION,
   ADMIN_API_ENDPOINT,
+  DEFAULT_BASE_URL
 } from "../config.mjs";
 import yaml from "js-yaml";
 
@@ -151,5 +154,8 @@ if (isContinue.continue) {
   console.timeEnd("delete time");
 
   delete etuYaml.isPublished;
+  etuYaml.isRemote = false;
+  etuYaml.imageBaseUrl = `${DEFAULT_BASE_URL}/i`;
+
   fs.writeFileSync(`${cwd}/etu-lock.yaml`, yaml.dump(etuYaml));
 }

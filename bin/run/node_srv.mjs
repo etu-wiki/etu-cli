@@ -39,7 +39,7 @@ import openInEditor from "open-in-editor";
 import livereload from "livereload";
 import serveHandler from "serve-handler";
 
-import { IMAGE_API_ENDPOINT } from "../config.mjs";
+import { IMAGE_API_ENDPOINT, DEFAULT_BASE_URL } from "../config.mjs";
 
 const start = Date.now();
 
@@ -70,7 +70,6 @@ function handleCookbook(rootPath, etuYaml) {
 
 export function run(rootPath, options, etuYaml) {
   console.log(info("Content: " + rootPath));
-  // let baseUrl = "http://localhost:3000";
 
   // etuYaml with name is etu project and should generate manifest and index.html
   if (options.cookbook) {
@@ -138,7 +137,7 @@ export function run(rootPath, options, etuYaml) {
 
     // regenerate manifest and etu-lock.yaml when localAddress changed or published local images and not cookbook
     if (
-      (localAddress !== "http://localhost:3000" ||
+      (localAddress !== DEFAULT_BASE_URL ||
         (options.remote && etuYaml.isPublished)) &&
       !options.cookbook
     ) {

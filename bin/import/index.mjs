@@ -23,6 +23,7 @@ import {
   THUMB_HEIGHT_THRESHOLD,
   HD_DIM_THRESHOLD,
   IMAGE_API_ENDPOINT,
+  DEFAULT_BASE_URL
 } from "../config.mjs";
 
 const start = Date.now();
@@ -235,7 +236,7 @@ etuLockYaml.images = etuLockYaml.images.filter(
 
 fs.writeFileSync(`${cwd}/etu.yaml`, yaml.dump(etuYaml));
 
-const baseUrl = "http://localhost:3000";
+const baseUrl = DEFAULT_BASE_URL;
 console.log(info(`Generating Manifests`));
 etuLockYaml.presentBaseUrl = baseUrl + "/p/";
 

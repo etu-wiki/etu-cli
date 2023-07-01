@@ -13,3 +13,5 @@ export const THUMB_HEIGHT_THRESHOLD = 1000;
 export const HD_DIM_THRESHOLD = 10000;
 export const MAX_CONCURRENT = 800;
 export const TILE_DIM = 512;
+
+export const DEFAULT_BASE_URL = 'http://localhost:3000'
