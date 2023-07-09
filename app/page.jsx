@@ -21,7 +21,7 @@ import styled from '@mui/material/styles/styled.js';
 
 // import { Link as Link2 } from "react-router-dom";
 
-import etu from './assets/etu.json';
+import etu from './etu.json';
 
 import {
   THUMB_WIDTH_THRESHOLD,

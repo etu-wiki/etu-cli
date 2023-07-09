@@ -155,7 +155,7 @@ export function run(rootPath, options, etuYaml) {
 
       // convert etuYaml to json and save to etu.json under public folder
       fs.writeFileSync(
-        `${__dirname}/app/assets/etu.json`,
+        `${__dirname}/app/etu.json`,
         JSON.stringify(etuYaml, null, 2)
       );
 

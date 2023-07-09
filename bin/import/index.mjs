@@ -253,7 +253,7 @@ fs.writeFileSync(`${cwd}/etu-lock.yaml`, yaml.dump(etuLockYaml));
 
 // convert etuLockYaml to json and save to etu.json under public folder
 fs.writeFileSync(
-  `${__dirname}/app/assets/etu.json`,
+  `${__dirname}/app/etu.json`,
   JSON.stringify(etuLockYaml, null, 2)
 );
 
