@@ -26,7 +26,7 @@
   <body>
     <div id="uv" class="uv"></div>
     <script>
-      $(function () {
+      window.addEventListener('uvLoaded', function (e) {
         var $UV = $('#uv')
 
         function resize() {
@@ -83,7 +83,7 @@
           },
           urlDataProvider
         )
-      })
+      }, false);
     </script>
     <script src="uv.js"></script>
     <script src="runtime-c0b9ebd32f37a3b036d6.js"></script>
