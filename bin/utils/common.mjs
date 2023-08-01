@@ -200,50 +200,24 @@ export function patchViewer(rootPath, presentUuidList, viewer) {
       fs.writeFileSync(indexPath, indexStr);
       break;
     case "u3":
-      if (presentUuidList.length === 1) {
-        fs.writeFileSync(
-          indexPath,
-          indexStr.replace(
-            "'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'",
-            `"p/${presentUuidList[0]}/manifest.json"`
-          )
-        );
-      } else {
-        presentUuidList.forEach((e, i) => {
-          manifestListStr = `"p/${e}/manifest.json"`;
+      presentUuidList.forEach((e, i) => {
+        manifestListStr = `"p/${e}/manifest.json"`;
 
-          fs.writeFileSync(
-            path.join(cwd, "public", `u3-${e}.html`),
-            indexStr.replace(
-              "'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'",
-              manifestListStr
-            )
-          );
-        });
-      }
+        fs.writeFileSync(
+          path.join(cwd, "public", `u3-${e}.html`),
+          indexStr.replace("'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'", manifestListStr)
+        );
+      });
       break;
     case "u4":
-      if (presentUuidList.length === 1) {
-        fs.writeFileSync(
-          indexPath,
-          indexStr.replace(
-            "'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'",
-            `"p/${presentUuidList[0]}/manifest.json"`
-          )
-        );
-      } else {
-        presentUuidList.forEach((e, i) => {
-          manifestListStr = `"p/${e}/manifest.json"`;
+      presentUuidList.forEach((e, i) => {
+        manifestListStr = `"p/${e}/manifest.json"`;
 
-          fs.writeFileSync(
-            path.join(cwd, "public", `u4-${e}.html`),
-            indexStr.replace(
-              "'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'",
-              manifestListStr
-            )
-          );
-        });
-      }
+        fs.writeFileSync(
+          path.join(cwd, "public", `u4-${e}.html`),
+          indexStr.replace("'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'", manifestListStr)
+        );
+      });
       break;
     default:
       break;

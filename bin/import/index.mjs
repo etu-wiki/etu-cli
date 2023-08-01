@@ -16,7 +16,6 @@ import path from "path";
 import sharp from "sharp";
 import ora from "ora";
 // import md5File from "md5-file";
-import { execSync } from "child_process";
 
 import {
   THUMB_WIDTH_THRESHOLD,
@@ -143,17 +142,30 @@ async function expandPath(image, rootPath) {
         if (!options.remote) {
           if (meta.height > HD_DIM_THRESHOLD || meta.width > HD_DIM_THRESHOLD) {
             const spinner = ora(`Converting standard ${filePath} `).start();
-            compressedFileInfo.level0 = true;
+            // compressedFileInfo.level0 = true;
+            // await image
+            //   .resize({
+            //     width: HD_DIM_THRESHOLD,
+            //     height: HD_DIM_THRESHOLD,
+            //     fit: "inside",
+            //   })
+            //   .toFile(
+            //     path.join(
+            //       imageFolder,
+            //       compressedFileInfo.image_id + "." + etuYaml.format
+            //     )
+            //   );
+            compressedFileInfo.tile = true;
             await image
-              .resize({
-                width: HD_DIM_THRESHOLD,
-                height: HD_DIM_THRESHOLD,
-                fit: "inside",
+              .toFormat(etuYaml.format)
+              .tile({
+                size: 512,
+                layout: etuYaml.iiifVersion === "3" ? "iiif3" : "iiif",
               })
               .toFile(
                 path.join(
                   imageFolder,
-                  compressedFileInfo.image_id + "." + etuYaml.format
+                  compressedFileInfo.image_id
                 )
               );
             spinner.stop();
@@ -217,7 +229,7 @@ for (const image of etuYaml.images) {
     );
     let label;
     if (compressedFileInfoList.length === 1) {
-      label = compressedFileFolderInfoList[0].label;
+      label = compressedFileInfoList[0].label;
     } else {
       label = image.path.split(path.sep).pop();
     }
@@ -238,20 +250,22 @@ fs.writeFileSync(`${cwd}/etu.yaml`, yaml.dump(etuYaml));
 
 const baseUrl = "http://localhost:3000";
 console.log(info(`Generating Manifests`));
-etuLockYaml.presentBaseUrl = baseUrl + "/p/";
+etuLockYaml.presentBaseUrl = baseUrl + "/p";
 
 if (options.remote) {
   etuLockYaml.isRemote = true;
   etuLockYaml.imageBaseUrl = IMAGE_API_ENDPOINT;
 } else {
   etuLockYaml.isRemote = false;
-  etuLockYaml.imageBaseUrl = baseUrl + "/i/";
+  etuLockYaml.imageBaseUrl = baseUrl + "/i";
 }
 
 generateManifest(etuLockYaml);
 fs.writeFileSync(`${cwd}/etu-lock.yaml`, yaml.dump(etuLockYaml));
 
 // convert etuLockYaml to json and save to etu.json under public folder
+fs.mkdirSync(`${__dirname}/app/src/assets`, { recursive: true });
+
 fs.writeFileSync(
   `${__dirname}/app/src/assets/etu.json`,
   JSON.stringify(etuLockYaml, null, 2)

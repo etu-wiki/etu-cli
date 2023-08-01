@@ -92,10 +92,11 @@ export function run(rootPath, options, etuYaml) {
 
     // to disploy thumbnail for etu project
     config.redirects = [
-      // {
-      //   source: `/i/:id/full/:width/0/default.${etuYaml.format}`,
-      //   destination: `/i/:id.${etuYaml.format}`,
-      // },
+      {
+        source: `/i/:id/full/:width/0/default.${etuYaml.format}`,
+        // destination: `/i/:id.${etuYaml.format}`,
+        destination: `/i/:id/thumbnail.${etuYaml.format}`,
+      },
     ];
 
     // set CORS headers

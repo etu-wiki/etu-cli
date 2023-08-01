@@ -34,7 +34,7 @@
     "@emotion/react": "^11.11.0",
     "@emotion/styled": "^11.11.0",
     "@etu-wiki/iiif-image-shims": "^0.0.14",
-    "@etu-wiki/sharp-iiif-shims": "^0.0.45",
+    "@etu-wiki/sharp-iiif-shims": "^0.0.57",
     "@mui/icons-material": "^5.11.16",
     "@mui/material": "^5.13.3",
     "@samvera/clover-iiif": "^1.15.0",
@@ -59,7 +59,7 @@
     "ora": "^6.1.0",
     "p-limit": "^4.0.0",
     "serve-handler": "^6.1.3",
-    "sharp": "^0.32.1",
+    "sharp": "^0.31.3",
     "tar": "^6.1.11",
     "uuid": "^8.3.2"
   },
