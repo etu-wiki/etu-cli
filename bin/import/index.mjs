@@ -238,7 +238,7 @@ fs.writeFileSync(`${cwd}/etu.yaml`, yaml.dump(etuYaml));
 
 const baseUrl = DEFAULT_BASE_URL;
 console.log(info(`Generating Manifests`));
-etuLockYaml.presentBaseUrl = baseUrl + "/p/";
+etuLockYaml.presentBaseUrl = baseUrl + "/p";
 
 if (options.remote) {
   etuLockYaml.isRemote = true;
