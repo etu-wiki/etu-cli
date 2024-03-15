@@ -62,7 +62,7 @@ const sourceFileFolderInfoList = [];
 const compressedFileFolderInfoList = [];
 
 function isAcceptableImage(file) {
-  return getMimeType(path.extname(file).slice(1));
+  return getMimeType(path.extname(file).slice(1).toLocaleLowerCase());
 }
 
 async function expandPath(image, rootPath) {
