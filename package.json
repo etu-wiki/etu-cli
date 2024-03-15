@@ -17,10 +17,7 @@
     "viewer",
     "template",
     "cookbook",
-    "app",
-    "index.html",
-    ".eslintrc.cjs",
-    "vite.config.ts"
+    "app"
   ],
   "bin": {
     "etu": "./bin/index.mjs"
