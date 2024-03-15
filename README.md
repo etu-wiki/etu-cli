@@ -1,6 +1,6 @@
-# ETU CLI Pro
+# ETU CLI Dynamic
 ## Introduction
-ETU CLI Pro is a local first IIIF solution to present your images. It converts them into IIIF compatible format and launch local http server to be interacted with.
+ETU CLI Dynamic is a local first IIIF solution to present your images. It converts them into IIIF compatible format and launch local http server to be interacted with.
 <p>
 ETU supports IIIF viewers such as Mirador 2, Mirador 3, Universal Viewer 3, Universal Viewer 4. 
 <p>
