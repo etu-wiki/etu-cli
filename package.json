@@ -1,6 +1,6 @@
 {
   "name": "etu-cli",
-  "version": "0.3.47",
+  "version": "0.3.48",
   "description": "command line tool to lanch iiif in localhost",
   "keywords": [
     "etu",
@@ -17,7 +17,7 @@
     "viewer",
     "template",
     "cookbook",
-    "src"
+    "app"
   ],
   "bin": {
     "etu": "./bin/index.mjs"
@@ -75,6 +75,7 @@
     "serve-handler": "^6.1.3",
     "sharp": "^0.33.2",
     "tar": "^6.1.11",
+    "typescript": "^5.4.2",
     "uuid": "^8.3.2",
     "vite": "^4.3.9"
   },

@@ -31,6 +31,7 @@ export const underline = (message) => `${chalk.underline(message)}`;
 
 export function staticBuild() {
   console.log(info(`Building for the first time`));
+  execSync("npm install", { cwd: path.join(__dirname, "app") });
   execSync("npm run build", { cwd: path.join(__dirname, "app") });
   fs.cpSync(path.join(__dirname, "app", "dist"), path.join(cwd, "public"), {
     recursive: true,
