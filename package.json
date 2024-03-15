@@ -24,10 +24,7 @@
   },
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint src --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "prepare": "npm install --prefix app"
   },
   "dependencies": {
     "@aws-sdk/client-cognito-identity": "^3.335.0",
