@@ -1,17 +1,18 @@
 {
     "@context": "http://iiif.io/api/presentation/2/context.json",
-    "@id": "{{{ presentBaseUrl }}}/manifest/{{ presentUuid }}/manifest.json",
+    "@id": "{{{ presentBaseUrl }}}/{{ presentUuid }}/manifest.json",
     "@type": "sc:Manifest",
     "label": "{{ label }}",
     "sequences": [
+
         {
-            "@id": "{{{ presentBaseUrl }}}/sequences/0001",
+            "@id": "{{{ presentBaseUrl }}}/s/2/{{ canvasUuid }}",
             "@type": "sc:Sequence",
             "label": "{{ label }}",
             "canvases": [
                 {{#items}}
                 {
-                    "@id": "{{{ presentBaseUrl }}}/canvas/{{ canvasUuid }}",
+                    "@id": "{{{ presentBaseUrl }}}/c/2/{{ canvasUuid }}",
                     "@type": "sc:Canvas",
                     "label": "{{ label }}",
                     {{^remote}}
@@ -24,7 +25,7 @@
                     {{/remote}}
                     "images": [
                         {
-                            "@id": "{{{ presentBaseUrl }}}/anno/0001",
+                            "@id": "{{{ presentBaseUrl }}}/c/2/{{ canvasUuid }}/ap/p",
                             "@type": "oa:Annotation",
                             "motivation": "sc:painting",
                             "resource": {
@@ -42,7 +43,7 @@
                                 }
                                 {{/level0}}
                             },
-                            "on": "{{{ presentBaseUrl }}}/canvas/{{ canvasUuid }}"
+                            "on": "{{{ presentBaseUrl }}}/c/2/{{ canvasUuid }}"
                         }
                     ],
                     "height": {{ height }},

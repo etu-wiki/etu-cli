@@ -270,5 +270,4 @@ await Promise.all(
 console.timeEnd("upload time");
 
 etuYaml.isPublished = true;
-etuYaml.isRemote = true;
 fs.writeFileSync(`${cwd}/etu-lock.yaml`, yaml.dump(etuYaml));

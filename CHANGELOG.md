@@ -29,3 +29,9 @@ ETU Pro
 * publish image to a serverless IIIF image server
 * support cloverIIIF
 * redesign local UI in nextjs
+
+## [v0.4.0] - 2024-03-15
+ETU Dynamic
+
+* add dynamic web service to enable advance IIIF feature
+* fix extension case bug

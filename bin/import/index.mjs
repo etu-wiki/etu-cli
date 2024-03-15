@@ -16,14 +16,12 @@ import path from "path";
 import sharp from "sharp";
 import ora from "ora";
 // import md5File from "md5-file";
-import { execSync } from "child_process";
 
 import {
   THUMB_WIDTH_THRESHOLD,
   THUMB_HEIGHT_THRESHOLD,
   HD_DIM_THRESHOLD,
   IMAGE_API_ENDPOINT,
-  DEFAULT_BASE_URL
 } from "../config.mjs";
 
 const start = Date.now();
@@ -64,7 +62,7 @@ const sourceFileFolderInfoList = [];
 const compressedFileFolderInfoList = [];
 
 function isAcceptableImage(file) {
-  return getMimeType(path.extname(file).slice(1));
+  return getMimeType(path.extname(file).slice(1).toLocaleLowerCase());
 }
 
 async function expandPath(image, rootPath) {
@@ -136,24 +134,38 @@ async function expandPath(image, rootPath) {
         compressedFileInfo.width = meta.width;
         // compressedFileInfo.md5 = md5File.sync(sourceFile);
 
+        fs.mkdirSync(path.join(imageFolder, compressedFileInfo.image_id), {
+          recursive: true,
+        });
+
         // skip image conversion in remote mode
         if (!options.remote) {
-          fs.mkdirSync(path.join(imageFolder, compressedFileInfo.image_id), {
-            recursive: true,
-          });
           if (meta.height > HD_DIM_THRESHOLD || meta.width > HD_DIM_THRESHOLD) {
             const spinner = ora(`Converting standard ${filePath} `).start();
-            compressedFileInfo.level0 = true;
+            // compressedFileInfo.level0 = true;
+            // await image
+            //   .resize({
+            //     width: HD_DIM_THRESHOLD,
+            //     height: HD_DIM_THRESHOLD,
+            //     fit: "inside",
+            //   })
+            //   .toFile(
+            //     path.join(
+            //       imageFolder,
+            //       compressedFileInfo.image_id + "." + etuYaml.format
+            //     )
+            //   );
+            compressedFileInfo.tile = true;
             await image
-              .resize({
-                width: HD_DIM_THRESHOLD,
-                height: HD_DIM_THRESHOLD,
-                fit: "inside",
+              .toFormat(etuYaml.format)
+              .tile({
+                size: 512,
+                layout: etuYaml.iiifVersion === "3" ? "iiif3" : "iiif",
               })
               .toFile(
                 path.join(
                   imageFolder,
-                  compressedFileInfo.image_id + "." + etuYaml.format
+                  compressedFileInfo.image_id
                 )
               );
             spinner.stop();
@@ -217,7 +229,7 @@ for (const image of etuYaml.images) {
     );
     let label;
     if (compressedFileInfoList.length === 1) {
-      label = compressedFileInfoList[0].label
+      label = compressedFileInfoList[0].label;
     } else {
       label = image.path.split(path.sep).pop();
     }
@@ -236,7 +248,7 @@ etuLockYaml.images = etuLockYaml.images.filter(
 
 fs.writeFileSync(`${cwd}/etu.yaml`, yaml.dump(etuYaml));
 
-const baseUrl = DEFAULT_BASE_URL;
+const baseUrl = "http://localhost:3000";
 console.log(info(`Generating Manifests`));
 etuLockYaml.presentBaseUrl = baseUrl + "/p";
 
@@ -252,8 +264,10 @@ generateManifest(etuLockYaml);
 fs.writeFileSync(`${cwd}/etu-lock.yaml`, yaml.dump(etuLockYaml));
 
 // convert etuLockYaml to json and save to etu.json under public folder
+fs.mkdirSync(`${__dirname}/app/src/assets`, { recursive: true });
+
 fs.writeFileSync(
-  `${__dirname}/app/etu.json`,
+  `${__dirname}/app/src/assets/etu.json`,
   JSON.stringify(etuLockYaml, null, 2)
 );
 

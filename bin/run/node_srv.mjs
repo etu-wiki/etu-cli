@@ -39,7 +39,9 @@ import openInEditor from "open-in-editor";
 import livereload from "livereload";
 import serveHandler from "serve-handler";
 
-import { IMAGE_API_ENDPOINT, DEFAULT_BASE_URL } from "../config.mjs";
+import {
+  IMAGE_API_ENDPOINT,
+} from "../config.mjs";
 
 const start = Date.now();
 
@@ -66,10 +68,17 @@ function handleCookbook(rootPath, etuYaml) {
   console.log(info(`Patching viewer settings`));
 
   patchViewer(rootPath, [presentUuid], etuYaml.viewer);
+
+  // const sharedPublicPath = path.join(__dirname, 'app', "public");
+  // if (fs.existsSync(sharedPublicPath)) {
+  //   fs.unlinkSync(sharedPublicPath);
+  // }
+  // fs.symlinkSync(rootPath, sharedPublicPath);
 }
 
 export function run(rootPath, options, etuYaml) {
-  console.log(info("Content: " + rootPath));
+  console.log(rootPath)
+  // let baseUrl = "http://localhost:3000";
 
   // etuYaml with name is etu project and should generate manifest and index.html
   if (options.cookbook) {
@@ -83,10 +92,11 @@ export function run(rootPath, options, etuYaml) {
 
     // to disploy thumbnail for etu project
     config.redirects = [
-      // {
-      //   source: `/i/:id/full/:width/0/default.${etuYaml.format}`,
-      //   destination: `/i/:id.${etuYaml.format}`,
-      // },
+      {
+        source: `/i/:id/full/:width/0/default.${etuYaml.format}`,
+        // destination: `/i/:id.${etuYaml.format}`,
+        destination: `/i/:id/thumbnail.${etuYaml.format}`,
+      },
     ];
 
     // set CORS headers
@@ -135,17 +145,12 @@ export function run(rootPath, options, etuYaml) {
       // networkAddress = ip ? `${httpMode}://${ip}:${details.port}` : null;
     }
 
-    // regenerate manifest and etu-lock.yaml when localAddress changed or published local images and not cookbook
-    if (
-      (localAddress !== DEFAULT_BASE_URL ||
-        (options.remote && etuYaml.isPublished)) &&
-      !options.cookbook
-    ) {
-      if (etuYaml.isRemote || options.remote) {
-        etuYaml.isRemote = true;
+    // regenerate manifest and etu-lock.yaml when localAddress changed
+    if (localAddress !== "http://localhost:3000" && !options.cookbook) {
+      if (etuYaml.isRemote) {
         etuYaml.imageBaseUrl = IMAGE_API_ENDPOINT;
       } else {
-        etuYaml.imageBaseUrl = localAddress + "";
+        etuYaml.imageBaseUrl = localAddress + "/i/";
       }
 
       console.log(info(`Generating Manifests`));
@@ -155,7 +160,7 @@ export function run(rootPath, options, etuYaml) {
 
       // convert etuYaml to json and save to etu.json under public folder
       fs.writeFileSync(
-        `${__dirname}/app/etu.json`,
+        `${__dirname}/app/src/etu.json`,
         JSON.stringify(etuYaml, null, 2)
       );
 
@@ -166,7 +171,6 @@ export function run(rootPath, options, etuYaml) {
 
     if (process.stdout.isTTY && process.env.NODE_ENV !== "production") {
       let message = info(`Accepting connections on ${localAddress}\n`);
-      message += `${info("Image Server mode:")} ${etuYaml.isRemote ? "remote" : "local"}\n`;
       message += `\n${bold("- Startup Time:")}  ${
         (stop - start) / 1000
       } seconds`;

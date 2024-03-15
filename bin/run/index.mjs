@@ -29,10 +29,6 @@ program
   )
   // .option("--cors", "Enable CORS, sets `Access-Control-Allow-Origin` to `*`")
   .option(
-    "-r, --remote",
-    "Run etu serve with images hosted on the remote server"
-  )
-  .option(
     "--ssl-cert <file path>",
     "Path to an SSL/TLS certificate's public key"
   )

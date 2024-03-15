@@ -1,6 +1,6 @@
 {
     "@context": "http://iiif.io/api/presentation/3/context.json",
-    "id": "{{{ presentBaseUrl }}}/manifest/{{ presentUuid }}/manifest.json",
+    "id": "{{{ presentBaseUrl }}}/{{ presentUuid }}/manifest.json",
     "type": "Manifest",
     "label": {
         "zh-Hant": [
@@ -10,7 +10,7 @@
     "items": [
         {{#items}}
         {
-            "id": "{{{ presentBaseUrl }}}/canvas/{{ canvasUuid }}",
+            "id": "{{{ presentBaseUrl }}}/c/3/{{ canvasUuid }}",
             "type": "Canvas",
             "label": {
                 "zh-Hant": [
@@ -32,11 +32,11 @@
             {{/remote}}
             "items": [
                 {
-                    "id": "{{{ presentBaseUrl }}}/annopage/0001",
+                    "id": "{{{ presentBaseUrl }}}/c/3/{{ canvasUuid }}/ap/p",
                     "type": "AnnotationPage",
                     "items": [
                         {
-                            "id": "{{{ presentBaseUrl }}}/anno/0001",
+                            "id": "{{{ presentBaseUrl }}}/c/3/{{ canvasUuid }}/ap/p/a/",
                             "type": "Annotation",
                             "motivation": "painting",
                             "body": {
@@ -56,7 +56,7 @@
                                 ]
                                 {{/level0}}
                             },
-                            "target": "{{{ presentBaseUrl }}}/canvas/{{ canvasUuid }}"
+                            "target": "{{{ presentBaseUrl }}}/c/3/{{ canvasUuid }}"
                         }
                     ]
                 }

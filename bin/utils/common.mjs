@@ -31,8 +31,8 @@ export const underline = (message) => `${chalk.underline(message)}`;
 
 export function staticBuild() {
   console.log(info(`Building for the first time`));
-  execSync("npm run build", { cwd: __dirname });
-  fs.cpSync(path.join(__dirname, "dist"), path.join(cwd, "public"), {
+  execSync("npm run build", { cwd: path.join(__dirname, "app") });
+  fs.cpSync(path.join(__dirname, "app", "dist"), path.join(cwd, "public"), {
     recursive: true,
   });
 }
@@ -143,7 +143,7 @@ export function patchViewer(rootPath, presentUuidList, viewer) {
         presentUuidList.map((e) => {
           // generate each m2.html for manifest.json while return the manifestItem to generate manifest list
           const manifestItem = {
-            manifestUri: `p/manifest/${e}/manifest.json`,
+            manifestUri: `p/${e}/manifest.json`,
             location: "ETU",
           };
           const indexStrItem = indexStr.replace(
@@ -164,7 +164,7 @@ export function patchViewer(rootPath, presentUuidList, viewer) {
     case "m3":
       manifestListStr = JSON.stringify(
         presentUuidList.map((e) => ({
-          manifestId: `p/manifest/${e}/manifest.json`,
+          manifestId: `p/${e}/manifest.json`,
           provider: "ETU",
         }))
       );
@@ -174,17 +174,20 @@ export function patchViewer(rootPath, presentUuidList, viewer) {
           presentUuidList.map((e) => {
             // generate each m3.html for manifest.json while return the manifestItem to generate manifest list
             const manifestItem = {
-              manifestId: `p/manifest/${e}/manifest.json`,
+              manifestId: `p/${e}/manifest.json`,
             };
             let indexStrItem = indexStr.replace(
               "'$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'",
-              JSON.stringify([ manifestItem ])
+              JSON.stringify([{ manifestId: "manifest.json" }])
             );
             indexStrItem = indexStrItem.replace(
               "'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'",
               "[]"
             );
-            fs.writeFileSync(path.join(rootPath, `m3-${e}.html`), indexStrItem);
+            fs.writeFileSync(
+              path.join(rootPath, `p/${e}/${viewer}.html`),
+              indexStrItem
+            );
             return manifestItem;
           })
         )
@@ -198,27 +201,21 @@ export function patchViewer(rootPath, presentUuidList, viewer) {
       break;
     case "u3":
       presentUuidList.forEach((e, i) => {
-        manifestListStr = `"p/manifest/${e}/manifest.json"`;
+        manifestListStr = `"p/${e}/manifest.json"`;
 
         fs.writeFileSync(
           path.join(cwd, "public", `u3-${e}.html`),
-          indexStr.replace(
-            "'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'",
-            manifestListStr
-          )
+          indexStr.replace("'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'", manifestListStr)
         );
       });
       break;
     case "u4":
       presentUuidList.forEach((e, i) => {
-        manifestListStr = `"p/manifest/${e}/manifest.json"`;
+        manifestListStr = `"p/${e}/manifest.json"`;
 
         fs.writeFileSync(
           path.join(cwd, "public", `u4-${e}.html`),
-          indexStr.replace(
-            "'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'",
-            manifestListStr
-          )
+          indexStr.replace("'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'", manifestListStr)
         );
       });
       break;
@@ -310,7 +307,7 @@ export function generateManifest(etuYaml) {
       .toString();
     const presentStr = Mustache.render(template, model);
 
-    const presentPath = path.join(rootPath, "p/manifest", model.presentUuid);
+    const presentPath = path.join(rootPath, "p", model.presentUuid);
     fs.mkdirSync(presentPath, { recursive: true });
     const presentFile = path.join(presentPath, "manifest.json");
     fs.writeFileSync(presentFile, presentStr);
