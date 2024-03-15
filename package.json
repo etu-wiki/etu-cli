@@ -16,7 +16,8 @@
     "bin",
     "viewer",
     "template",
-    "cookbook"
+    "cookbook",
+    "app"
   ],
   "bin": {
     "etu": "./bin/index.mjs"
