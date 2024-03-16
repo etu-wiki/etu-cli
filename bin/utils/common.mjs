@@ -31,7 +31,7 @@ export const underline = (message) => `${chalk.underline(message)}`;
 
 export function staticBuild() {
   console.log(info(`Building for the first time`));
-  console.log("dir: ", path.join(__dirname, "app"));
+  execSync("npm install", { cwd: path.join(__dirname, "app") });
   execSync("npm run build", { cwd: path.join(__dirname, "app") });
   fs.cpSync(path.join(__dirname, "app", "dist"), path.join(cwd, "public"), {
     recursive: true,
@@ -132,6 +132,15 @@ export const registerShutdown = (fn) => {
   process.on("SIGTERM", wrapper);
   process.on("exit", wrapper);
 };
+
+function addLastMark(arr) {
+  return arr.map((e, i, a) => {
+    if (a.length === i + 1) {
+      e.last = true;
+    }
+    return e;
+  });
+}
 
 export function patchViewer(rootPath, presentUuidList, viewer) {
   const indexPath = path.join(rootPath, `${viewer}.html`);
@@ -291,14 +300,6 @@ export function generateManifest(etuYaml) {
       items.push(item);
     }
 
-    function addLastMark(arr) {
-      return arr.map((e, i, a) => {
-        if (a.length === i + 1) {
-          e.last = true;
-        }
-        return e;
-      });
-    }
     model.items = addLastMark(items);
 
     const template = fs
