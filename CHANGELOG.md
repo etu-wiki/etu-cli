@@ -35,3 +35,9 @@ ETU Dynamic
 
 * add dynamic web service to enable advance IIIF feature
 * fix extension case bug
+
+## [v0.4.13] - 2024-03-15
+ETU Dynamic
+
+* support incremental import by either adding new path in import command
+* or add image in original path and run import command again
