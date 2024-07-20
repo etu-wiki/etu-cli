@@ -9,7 +9,7 @@ import {
   generateManifest,
   staticBuild,
 } from "../utils/common.mjs";
-import { readFileSync } from "fs";
+import { readFileSync, existsSync } from "fs";
 import yaml from "js-yaml";
 import fs from "fs";
 import path from "path";
@@ -33,6 +33,7 @@ const description = `Import images from local path.
 
 program
   .name("etu import")
+  .argument("[path]", "path to the image folder")
   .option("-r, --remote", "import image for hosting server")
   .helpOption("-h, --help", "Display help for command")
   .description(description)
@@ -40,6 +41,7 @@ program
   .parse(process.argv);
 
 const options = program.opts();
+const pathArg = program.args[0];
 
 let etuYamlPath = path.join(cwd, "etu.yaml");
 if (!fs.existsSync(etuYamlPath)) {
@@ -99,6 +101,18 @@ async function expandPath(image, rootPath) {
 
       compressedFileFolderInfoList.push(compressedFileFoler);
     } else if (isAcceptableImage(filePath)) {
+      // if the filePath is already in etu-lock.yaml, skip it
+      if (
+        etuLockYaml.images.some(
+          (image) =>
+            image.path === entry &&
+            image.files.some(
+              (file) => file.filename === path.basename(filePath)
+            )
+        )
+      ) {
+        continue;
+      }
       let meta, image;
       try {
         image = sharp(filePath, { limitInputPixels: false });
@@ -162,12 +176,7 @@ async function expandPath(image, rootPath) {
                 size: 512,
                 layout: etuYaml.iiifVersion === "3" ? "iiif3" : "iiif",
               })
-              .toFile(
-                path.join(
-                  imageFolder,
-                  compressedFileInfo.image_id
-                )
-              );
+              .toFile(path.join(imageFolder, compressedFileInfo.image_id));
             spinner.stop();
           } else {
             compressedFileInfo.level0 = true;
@@ -219,8 +228,14 @@ async function expandPath(image, rootPath) {
   return compressedFileInfoList;
 }
 
+// if path argument is a valid path, add it to etu.yaml
+if (existsSync(pathArg)) {
+  etuYaml.images.push({ path: pathArg });
+  fs.writeFileSync(`${cwd}/etu.yaml`, yaml.dump(etuYaml));
+}
+
 // import images
-etuLockYaml.images = [];
+// etuLockYaml.images = [];
 for (const image of etuYaml.images) {
   if (!image.files) {
     const compressedFileInfoList = await expandPath(
@@ -243,7 +258,7 @@ for (const image of etuYaml.images) {
 
 etuLockYaml.images.push(...compressedFileFolderInfoList);
 etuLockYaml.images = etuLockYaml.images.filter(
-  (image) => image.files.length > 0
+  (image) => image && image.files && image.files.length > 0
 );
 
 fs.writeFileSync(`${cwd}/etu.yaml`, yaml.dump(etuYaml));
