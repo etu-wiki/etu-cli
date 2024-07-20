@@ -20,7 +20,7 @@
     "app"
   ],
   "bin": {
-    "etu": "./bin/index.mjs"
+    "etu": "bin/index.mjs"
   },
   "type": "module",
   "scripts": {
