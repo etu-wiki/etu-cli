@@ -27,7 +27,7 @@ program
     "Specify a port on which to listen",
     "3000"
   )
-  // .option("--cors", "Enable CORS, sets `Access-Control-Allow-Origin` to `*`")
+  .option("--cors", "Enable CORS, sets `Access-Control-Allow-Origin` to `*`")
   .option(
     "--ssl-cert <file path>",
     "Path to an SSL/TLS certificate's public key"
