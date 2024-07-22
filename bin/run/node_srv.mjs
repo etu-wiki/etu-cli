@@ -145,6 +145,8 @@ export function run(rootPath, options, etuYaml) {
       // networkAddress = ip ? `${httpMode}://${ip}:${details.port}` : null;
     }
 
+    // console.log(info(`Starting server on port ${details.port}`));
+    // console.log(localAddress);
     // regenerate manifest and etu-lock.yaml when localAddress changed
     if (localAddress !== "http://localhost:3000" && !options.cookbook) {
       if (etuYaml.isRemote) {

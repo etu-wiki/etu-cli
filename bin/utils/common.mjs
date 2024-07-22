@@ -246,11 +246,15 @@ export function generateManifest(etuYaml) {
       presentBaseUrl,
       imageBaseUrl,
       format,
-      label: image.label,
-      presentUuid: uuid(),
+      label: image.label
     };
     if (isRemote) {
       model.remote = true;
+    }
+    if (image.presentUuid) {
+      model.presentUuid = image.presentUuid;
+    } else {
+      model.presentUuid = uuid();
     }
     image.presentUuid = model.presentUuid;
     presentUuidList.push(model.presentUuid);
