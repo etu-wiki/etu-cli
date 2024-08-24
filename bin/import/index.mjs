@@ -105,7 +105,7 @@ async function expandPath(image, rootPath) {
       if (
         etuLockYaml.images.some(
           (image) =>
-            image.path === entry &&
+            image.path === entry && image.files &&
             image.files.some(
               (file) => file.filename === path.basename(filePath)
             )
