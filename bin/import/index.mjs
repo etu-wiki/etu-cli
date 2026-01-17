@@ -7,7 +7,6 @@ import {
   info,
   error,
   generateManifest,
-  staticBuild,
 } from "../utils/common.mjs";
 import { readFileSync, existsSync } from "fs";
 import yaml from "js-yaml";
@@ -278,15 +277,11 @@ if (options.remote) {
 generateManifest(etuLockYaml);
 fs.writeFileSync(`${cwd}/etu-lock.yaml`, yaml.dump(etuLockYaml));
 
-// convert etuLockYaml to json and save to etu.json under public folder
-fs.mkdirSync(`${__dirname}/app/src/assets`, { recursive: true });
-
+// write etu.json to public folder for runtime fetching
 fs.writeFileSync(
-  `${__dirname}/app/src/assets/etu.json`,
+  `${cwd}/public/etu.json`,
   JSON.stringify(etuLockYaml, null, 2)
 );
-
-staticBuild();
 
 const stop = Date.now();
 console.log(info(`Import Time: ${(stop - start) / 1000} seconds`));

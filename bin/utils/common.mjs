@@ -21,7 +21,6 @@ export const cwd = process.cwd();
 import chalk from "chalk";
 import jwt from "jsonwebtoken";
 
-import { execSync } from "child_process";
 
 export const warning = (message) => `${chalk.yellow("WARNING:")} ${message}`;
 export const info = (message) => `${chalk.green("INFO:")} ${message}`;
@@ -29,14 +28,6 @@ export const error = (message) => `${chalk.red("ERROR:")} ${message}`;
 export const bold = (message) => `${chalk.bold(message)}`;
 export const underline = (message) => `${chalk.underline(message)}`;
 
-export function staticBuild() {
-  console.log(info(`Building for the first time`));
-  execSync("npm install", { cwd: path.join(__dirname, "app") });
-  execSync("npm run build", { cwd: path.join(__dirname, "app") });
-  fs.cpSync(path.join(__dirname, "app", "dist"), path.join(cwd, "public"), {
-    recursive: true,
-  });
-}
 
 export function isSTSCredentialsExpired(credentials) {
   const expirationTime = credentials.Expiration;
@@ -331,8 +322,10 @@ export function generateManifest(etuYaml) {
     patchViewer(rootPath, presentUuidList, viewer);
   }
 
-  // fs.cpSync(
-  //   path.join(__dirname, "viewer", "index.html"),
-  //   path.join(cwd, "public", "index.html")
-  // );
+  // Copy the pre-built app to public folder
+  fs.cpSync(
+    path.join(__dirname, "app", "dist"),
+    path.join(cwd, "public"),
+    { recursive: true }
+  );
 }

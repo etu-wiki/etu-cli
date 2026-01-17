@@ -17,7 +17,6 @@ import {
   bold,
   warning,
   underline,
-  staticBuild,
 } from "../utils/common.mjs";
 import { createServer as createHttpServer } from "http";
 import { createServer as createSecureHttpSever } from "https";
@@ -160,13 +159,6 @@ export function run(rootPath, options, etuYaml) {
       generateManifest(etuYaml);
       fs.writeFileSync(`${cwd}/etu-lock.yaml`, yaml.dump(etuYaml));
 
-      // convert etuYaml to json and save to etu.json under public folder
-      fs.writeFileSync(
-        `${__dirname}/app/src/etu.json`,
-        JSON.stringify(etuYaml, null, 2)
-      );
-
-      staticBuild();
     }
 
     const stop = Date.now();
