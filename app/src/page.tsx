@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AppBar from '@mui/material/AppBar/index.js';
 import Button from '@mui/material/Button/index.js';
 import Switch from '@mui/material/Switch/index.js';
@@ -21,7 +21,6 @@ import styled from '@mui/material/styles/styled.js';
 
 // import { Link as Link2 } from "react-router-dom";
 
-import etu from './assets/etu.json';
 const win: Window = window;
 import {
   THUMB_WIDTH_THRESHOLD,
@@ -101,6 +100,21 @@ const MaterialUISwitch = styled(Switch)(({ theme }) => ({
 
 export default function Page() {
   const [dark, setDark] = useState(true);
+  const [etu, setEtu] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/etu.json')
+      .then(response => response.json())
+      .then(data => {
+        setEtu(data);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error('Error loading etu.json:', error);
+        setLoading(false);
+      });
+  }, []);
 
   const handleThemeChange = () => {
     setDark(!dark);
@@ -108,6 +122,17 @@ export default function Page() {
   const logoStyles = {
     margin: '10px'
   };
+
+  if (loading || !etu) {
+    return (
+      <ThemeProvider theme={dark ? darkTheme : lightTheme}>
+        <CssBaseline />
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+          <Typography variant="h6">Loading...</Typography>
+        </Box>
+      </ThemeProvider>
+    );
+  }
 
   return (
     <ThemeProvider theme={dark ? darkTheme : lightTheme}>
@@ -166,7 +191,7 @@ export default function Page() {
         <Container sx={{ py: 0 }} maxWidth="md">
           {/* End hero unit */}
           <Grid container spacing={4}>
-            {etu.images.map((present) => (
+            {etu.images.map((present: any) => (
               <Grid item key={present.presentUuid} xs={12} sm={6} md={4}>
                 <Card
                   sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
