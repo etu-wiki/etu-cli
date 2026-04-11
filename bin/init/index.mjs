@@ -23,8 +23,11 @@ program
   .name("etu init")
   .helpOption("-h, --help", "Display help for command")
   .description(description)
+  .option("-p, --path <path>", "Initialize with specified image path using default values")
   .addHelpCommand(false)
   .parse(process.argv);
+
+const options = program.opts();
 
 // stop initialization if current folder is not empty
 if (fs.readdirSync(process.cwd()).length > 0) {
@@ -35,67 +38,91 @@ if (fs.readdirSync(process.cwd()).length > 0) {
   );
   process.exit(1);
 }
-console.log(INIT_PROMPT);
 
-const q1q2 = await inquirer.prompt([
-  {
-    type: "input",
-    name: "name",
-    message: "project name:",
-    default: path.basename(process.cwd()),
-    validate(input) {
-      return input.length > 0 ? true : "You must provide a project name";
-    },
-  },
-  {
-    type: "input",
-    name: "author",
-    message: "author:"
-  },
-  {
-    type: "input",
-    name: "license",
-    message: "license:",
-  },
-  {
-    type: "list",
-    name: "iiifVersion",
-    message: "iiif version:",
-    default: "3",
-    choices: [
-      { name: "v3", value: "3" },
-      { name: "v2", value: "2" }
-    ],
-  },
-]);
+let answer;
 
-const answer = { ...q1q2 };
+if (options.path) {
+  // Validate the provided path
+  if (!existsSync(options.path)) {
+    console.log(error(`Invalid path: ${options.path}`));
+    process.exit(1);
+  }
 
-const images = [];
-let isContinue;
-do {
-  const q3 = await inquirer.prompt([
+  // Use defaults when path is provided
+  answer = {
+    name: path.basename(process.cwd()),
+    author: "",
+    license: "",
+    iiifVersion: "3",
+    images: [{ path: path.normalize(path.resolve(options.path)) }]
+  };
+
+  console.log(`Initializing ETU project with path: ${options.path}`);
+  console.log(`Using defaults: name="${answer.name}", iiifVersion="3"`);
+} else {
+  // Interactive mode
+  console.log(INIT_PROMPT);
+
+  const q1q2 = await inquirer.prompt([
     {
       type: "input",
-      name: "path",
-      message: "image path:",
+      name: "name",
+      message: "project name:",
+      default: path.basename(process.cwd()),
       validate(input) {
-        return existsSync(input) ? true : "You must provide a valid path";
+        return input.length > 0 ? true : "You must provide a project name";
       },
     },
-  ]);
-  images.push({ path: path.normalize(path.resolve(q3.path)) });
-  isContinue = await inquirer.prompt([
     {
-      type: "confirm",
-      name: "continue",
-      default: false,
-      message: "another image path:",
+      type: "input",
+      name: "author",
+      message: "author:"
+    },
+    {
+      type: "input",
+      name: "license",
+      message: "license:",
+    },
+    {
+      type: "list",
+      name: "iiifVersion",
+      message: "iiif version:",
+      default: "3",
+      choices: [
+        { name: "v3", value: "3" },
+        { name: "v2", value: "2" }
+      ],
     },
   ]);
-} while (isContinue.continue);
 
-answer.images = images;
+  answer = { ...q1q2 };
+
+  const images = [];
+  let isContinue;
+  do {
+    const q3 = await inquirer.prompt([
+      {
+        type: "input",
+        name: "path",
+        message: "image path:",
+        validate(input) {
+          return existsSync(input) ? true : "You must provide a valid path";
+        },
+      },
+    ]);
+    images.push({ path: path.normalize(path.resolve(q3.path)) });
+    isContinue = await inquirer.prompt([
+      {
+        type: "confirm",
+        name: "continue",
+        default: false,
+        message: "another image path:",
+      },
+    ]);
+  } while (isContinue.continue);
+
+  answer.images = images;
+}
 
 // const q4 = await inquirer.prompt([
 //   {
