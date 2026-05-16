@@ -162,44 +162,37 @@ export function patchViewer(rootPath, presentUuidList, viewer) {
       );
       fs.writeFileSync(indexPath, indexStr);
       break;
-    case "m3":
-      manifestListStr = JSON.stringify(
+    case "m3": {
+      const catalogStr = JSON.stringify(
         presentUuidList.map((e) => ({
           manifestId: `p/${e}/manifest.json`,
           provider: "ETU",
         }))
       );
-      indexStr = indexStr.replace(
-        "'$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'",
-        JSON.stringify(
-          presentUuidList.map((e) => {
-            // generate each m3.html for manifest.json while return the manifestItem to generate manifest list
-            const manifestItem = {
-              manifestId: `p/${e}/manifest.json`,
-            };
-            let indexStrItem = indexStr.replace(
-              "'$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'",
-              JSON.stringify([{ manifestId: "manifest.json" }])
-            );
-            indexStrItem = indexStrItem.replace(
-              "'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'",
-              "[]"
-            );
-            fs.writeFileSync(
-              path.join(rootPath, `p/${e}/${viewer}.html`),
-              indexStrItem
-            );
-            return manifestItem;
-          })
-        )
+      const windowsStr = JSON.stringify(
+        presentUuidList.map((e) => ({ manifestId: `p/${e}/manifest.json` }))
       );
 
-      indexStr = indexStr.replace(
-        "'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'",
-        manifestListStr
-      );
+      // Per-UUID m3-<uuid>.html at root — opens just that manifest, empty catalog
+      presentUuidList.forEach((e) => {
+        let indexStrItem = indexStr.replace(
+          "'$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'",
+          JSON.stringify([{ manifestId: `p/${e}/manifest.json` }])
+        );
+        indexStrItem = indexStrItem.replace(
+          "'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'",
+          "[]"
+        );
+        fs.writeFileSync(path.join(rootPath, `m3-${e}.html`), indexStrItem);
+      });
+
+      // Aggregate m3.html at root — all manifests open, full catalog
+      indexStr = indexStr
+        .replace("'$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'", windowsStr)
+        .replace("'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'", catalogStr);
       fs.writeFileSync(indexPath, indexStr);
       break;
+    }
     case "u3":
       presentUuidList.forEach((e, i) => {
         manifestListStr = `"p/${e}/manifest.json"`;

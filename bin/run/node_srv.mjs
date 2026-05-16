@@ -2,15 +2,12 @@ import fs from "fs";
 import path from "path";
 
 import handler from "serve-handler";
-import yaml from "js-yaml";
 
 import open from "open";
 
 import {
-  cwd,
   __dirname,
   patchViewer,
-  generateManifest,
   registerShutdown,
   info,
   error,
@@ -21,26 +18,8 @@ import {
 import { createServer as createHttpServer } from "http";
 import { createServer as createSecureHttpSever } from "https";
 
-// import { networkInterfaces } from "os";
-// const interfaces: any = networkInterfaces();
-// const getNetworkAddress = () => {
-//     for (const name of Object.keys(interfaces)) {
-//         for (const inter of interfaces[name]) {
-//             const { address, family, internal } = inter;
-//             if (family === "IPv4" && !internal) {
-//                 return address;
-//             }
-//         }
-//     }
-// };
-
 import openInEditor from "open-in-editor";
 import livereload from "livereload";
-import serveHandler from "serve-handler";
-
-import {
-  IMAGE_API_ENDPOINT,
-} from "../config.mjs";
 
 const start = Date.now();
 
@@ -144,22 +123,8 @@ export function run(rootPath, options, etuYaml) {
       // networkAddress = ip ? `${httpMode}://${ip}:${details.port}` : null;
     }
 
-    // console.log(info(`Starting server on port ${details.port}`));
-    // console.log(localAddress);
-    // regenerate manifest and etu-lock.yaml when localAddress changed
-    if (localAddress !== "http://localhost:3000" && !options.cookbook) {
-      if (etuYaml.isRemote) {
-        etuYaml.imageBaseUrl = IMAGE_API_ENDPOINT;
-      } else {
-        etuYaml.imageBaseUrl = localAddress + "/i/";
-      }
-
-      console.log(info(`Generating Manifests`));
-      etuYaml.presentBaseUrl = localAddress + "/p/";
-      generateManifest(etuYaml);
-      fs.writeFileSync(`${cwd}/etu-lock.yaml`, yaml.dump(etuYaml));
-
-    }
+    // Manifests use relative paths, so no regeneration is needed when the
+    // server runs on a different host/port — public/ is portable as-is.
 
     const stop = Date.now();
 

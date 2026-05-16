@@ -262,16 +262,17 @@ etuLockYaml.images = etuLockYaml.images.filter(
 
 fs.writeFileSync(`${cwd}/etu.yaml`, yaml.dump(etuYaml));
 
-const baseUrl = "http://localhost:3000";
 console.log(info(`Generating Manifests`));
-etuLockYaml.presentBaseUrl = baseUrl + "/p";
+// Use path-relative URLs so public/ can be served as static html from any host
+// (resolved against each manifest at public/p/<uuid>/manifest.json)
+etuLockYaml.presentBaseUrl = "p";
 
 if (options.remote) {
   etuLockYaml.isRemote = true;
   etuLockYaml.imageBaseUrl = IMAGE_API_ENDPOINT;
 } else {
   etuLockYaml.isRemote = false;
-  etuLockYaml.imageBaseUrl = baseUrl + "/i";
+  etuLockYaml.imageBaseUrl = "i";
 }
 
 generateManifest(etuLockYaml);

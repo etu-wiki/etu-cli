@@ -104,7 +104,7 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/etu.json')
+    fetch('etu.json')
       .then(response => response.json())
       .then(data => {
         setEtu(data);
@@ -181,9 +181,9 @@ export default function Page() {
               justifyContent="center"
             >
               {etu.iiifVersion === '3' ? (
-                <Button variant="contained" onClick={() => win.location = '/m3.html'}>All in Mirador 3</Button>
+                <Button variant="contained" onClick={() => win.location = 'm3.html'}>All in Mirador 3</Button>
               ) : (
-                <Button variant="contained" onClick={() => win.location = '/m2.html'}>All in Mirador 2</Button>
+                <Button variant="contained" onClick={() => win.location = 'm2.html'}>All in Mirador 2</Button>
               )}
             </Stack>
           </Container>
@@ -212,7 +212,7 @@ export default function Page() {
                   {etu.iiifVersion === '3' ? (
                     <CardActions>
                       <Link href={`u4-${present.presentUuid}.html`}>Universal 4</Link>
-                      <Link href={`/p/${present.presentUuid}/m3.html`}>Mirador 3</Link>
+                      <Link href={`m3-${present.presentUuid}.html`}>Mirador 3</Link>
                       {/* <Link href={`http://localhost/index.html?manifest=http://localhost/p/3/${present.presentUuid}`}>Mirador 3-ocr</Link> */}
                       {/* <Link2 href={`#clover/${present.presentUuid}`}>Clover</Link2> */}
                     </CardActions>
